@@ -1,0 +1,23 @@
+* C:\Users\Ricky\Documents\OneDrive Laptop\OneDrive\Documenti\Magistrale\MAEC\Crossover Netlist\Crossover Netlist\Crossover.asc
+Rspk3 N006 0 8
+R2 N006 N007 10
+Rspk2 N004 0 8
+R1 N004 N005 10
+Rspk1 N002 0 8
+C5 N006 0 28u
+C6 N007 0 47u
+C4 N005 0 4.7u
+C2 N003 0 2.8u
+C3 N003 N004 28u
+C1 N001 N002 2.8u
+L3 N004 0 3.5m
+L1 N002 0 0.35m
+L2 N001 N003 0.35m
+L4 N001 N006 3.5m
+Vin N001 0 wavefile=ExpSweep.wav
+.tran 2
+.wave "outputLow.wav" 16 192k V(N006)
+.wave "outputMid.wav" 16 192k V(n004)
+.wave "outputHigh.wav" 16 192k V(n002)
+.backanno
+.end
