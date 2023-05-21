@@ -32,25 +32,57 @@ public:
         std::cout <<"test\n";
         //Actual SQPR Tree code
 
-        //Nodes
-        ogdf::List<std::pair<int,int>> edges{std::make_pair(1,2)};
+        ogdf::Graph G;
 
-        //ogdf::customGraph(G,n,edges);
 
+        buildInputGraph(G, inputs);
 
         //ogdf::GraphIO::write(G, "output-manual.svg", GraphIO::drawSVG);
-        testTriconnectedComps(outputs);
+        buildTriconnectedComps(G, outputs);
 
 
 
     }
 
-    void testTriconnectedComps(ArgumentList outputs)
+    void buildInputGraph(ogdf::Graph &G, ArgumentList inputs) {
+        matlab::data::StructArray inputEdges = inputs[0];
+        matlab::data::StringArray inputNodes = inputs[1];
+        //int n = matlab::data::ArrayDimensions::getNumElement(inputNodes.getDimensions());
+
+
+        //Create map for mapping index string name to index number
+        //(ogdf library can only identify nodes by their integer index)
+        std::map<std::string, ogdf::node> nodesIndexMap;
+
+        //ogdf::node *nodes = (ogdf::node *) malloc( * sizeof(ogdf::node));
+        int i =0;
+        std::cout << "Printing nodes: \n";
+        for (auto node : inputNodes) {
+            //nodes[i] = G.newNode(i);
+            //nodesIndexMap[inputNodes[i]] = i;
+            std::string nodeName = std::string(inputNodes[i]);
+            std::cout << nodeName << "\n";
+            nodesIndexMap[nodeName] = G.newNode(i);
+            i++;
+        }
+
+        i=0;
+        std::cout << "Printing edges: \n";
+        for (matlab::data::Struct edge : inputEdges) {
+            matlab::data::StringArray endpoints = edge["EndNodes"];
+            std::string endpointA = std::string(endpoints[0]);
+            std::string endpointB = std::string(endpoints[1]);
+            std::cout << "Edge index " << i << ", (" << endpointA << "," << endpointB << ")\n";
+            G.newEdge(nodesIndexMap[endpointA], nodesIndexMap[endpointB], i);
+            i++;
+        }
+
+
+    }
+
+    void buildTriconnectedComps(ogdf::Graph &G, ArgumentList outputs)
     {
 
-        ogdf::Graph G;
-        int n = 2;
-        ogdf::randomBiconnectedGraph(G, 4, 10);
 
         std::cout <<  "Printing the graph\n";
         for(ogdf::edge e : G.edges) {
