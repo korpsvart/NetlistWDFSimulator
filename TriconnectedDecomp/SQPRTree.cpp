@@ -100,6 +100,7 @@ public:
         StructArray structArray = factory.createStructArray({1, numberOfComps},{"edges", "type"});
 
         //Iterate over the triconnected comps
+        int k=0; //index for the components (some components may be empty)
         for(int i=0; i<numberOfComps;i++)
         {
             std::cout << "component: " << i << "\n";
@@ -116,14 +117,59 @@ public:
             }
          
             size_t numberOfEdges=edgesIds.size();
-            structArray[i]["edges"]=factory.createArray<int>({1, numberOfEdges}, &edgesIds[0],edgesIds.data() + edgesIds.size());
-            structArray[i]["type"]=factory.createScalar<int16_t>((int16_t)comp.m_type);
+            if (numberOfEdges>0) //avoid empty components
+            {
+                structArray[k]["edges"]=factory.createArray<int>({1, numberOfEdges}, &edgesIds[0],edgesIds.data() + edgesIds.size());
+                structArray[k]["type"]=factory.createScalar<int16_t>((int16_t)comp.m_type);
+                k++;
+            }
+
         }
 
         outputs[0] = structArray;
+        outputs[1] = factory.createScalar(k); //return also the number of non-empty components
 
        
     }
+
+
+    void buildSQPRTree(ogdf::Graph &G, ogdf::edge refEdge, ArgumentList outputs)
+    {
+
+
+        std::cout <<  "Printing the graph\n";
+        for(ogdf::edge e : G.edges) {
+            std::cout <<"Edge id(??): " << e->index() << ", endpoints: ";
+            std::cout << e <<"\n";
+        }
+        
+        
+        
+        ogdf::StaticSPQRTree sqprTree(G);
+
+        //Get root node (node containing component which has the ref edge)
+        ogdf::node rootNode = sqprTree.rootNode();
+
+        //Create output structure
+        const char* field_names[] = {"edges", "type", "children"};
+        size_t numberOfComps = 5; //adjust this
+
+
+        ArrayFactory factory; //factory for generating output structs and arrays
+        StructArray structArray = factory.createStructArray({1, numberOfComps},{"edges", "type", "children"});
+
+
+        //get outgoing edges from root node
+        std::vector<ogdf::edge> outEdges;
+        //rootNode->outEdges(outEdges);
+
+        ogdf::internal::GraphObjectContainer<ogdf::AdjElement> adjEntries = rootNode->adjEntries;
+
+
+
+    }
+
+
 
     void testSPQRTree()
     {
