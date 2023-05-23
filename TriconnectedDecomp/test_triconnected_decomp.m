@@ -11,4 +11,7 @@ N = string(struct2cell(N));
 T = T(1:numComps);
 numEdges = size(E, 1);
 refEdgeIndex = 0; %chosen arbitrarily here, in practice you should give the edge of the non-linear element
-Tree = buildTree(T, numEdges, refEdgeIndex);
+
+%Also pass the element values for adaptation
+
+[Tree, Z] = buildTree(T, numEdges, refEdgeIndex, E, Fs);
