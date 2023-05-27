@@ -35,7 +35,9 @@ T(rootCompIndex).parent = -1;
 M = max([T.edges]); %find the total number of edges, including virtual ones
 Z = zeros(M, 1);
 
-[Tree,Z] = exploreComponent(T, N, numEdges, rootCompIndex, refEdgeIndex, E, Z, Fs);
+[Tree,Z] = exploreComponent(T, N, numEdges, rootCompIndex, refEdgeIndex, E, Z, Fs, 1);
+
+
 
 
 
