@@ -5,9 +5,11 @@ function [T, Z] = exploreComponent(T, N, numEdges, compIndex, lastVirtualEdge, E
 %non-linear element)
 
 T(compIndex).depth = depth;
+T(compIndex).parentEdge = lastVirtualEdge;
 
 %%Exploration phase
-for i=1:numel(T(compIndex).edges)
+numCompEdges=numel(T(compIndex).edges);
+for i=1:numCompEdges
     
     if T(compIndex).edges(i)==lastVirtualEdge
         continue;
@@ -44,8 +46,9 @@ end
 
 
 %Adapt the real edges
-for i=1:numel(T(compIndex).edges)
-    if T(compIndex).edges(i) < numEdges %edge is real
+for i=1:numCompEdges
+    %Check if edge is real and if it's not the root non-adaptable element
+    if T(compIndex).edges(i) < numEdges && T(compIndex).edges(i)~=lastVirtualEdge
         %Get corresponding MATLAB index for the edge
         element_mIndex = T(compIndex).edges(i)+1;
         element = E(element_mIndex);
@@ -65,23 +68,50 @@ element_mIndex = lastVirtualEdge+1;
 type = T(compIndex).type;
 
 if type == 0 %PARALLEL
-    sum=0;
-    for i=1:numel(T(compIndex).edges)
+    adaptValue=0;
+    for i=1:numCompEdges
         if T(compIndex).edges(i) ~= lastVirtualEdge %get all the others
             element_mIndex2 = T(compIndex).edges(i)+1;
-            sum=sum+(1/Z(element_mIndex2));
+            adaptValue=adaptValue+(1/Z(element_mIndex2));
         end
     end
-    Z(element_mIndex)= 1/sum;
-elseif type == 1
-    sum=0;
-    for i=1:numel(T(compIndex).edges)
+    Z(element_mIndex)= 1/adaptValue;
+
+    %Generate scattering matrix
+    Z_values = Z(T(compIndex).edges+1); %Get the values for current comp. Z
+    G_values = 1./Z_values;
+
+    %S=2/sum(G_values)*G_values(:)*ones(1, numCompEdges)-eye(numCompEdges);
+
+    %Alternatively
+    Z_m = diag(Z_values);
+    Q = ones(1, numCompEdges);
+    S=2*Q'*pinv(Q*inv(Z_m)*Q')*Q*inv(Z_m)-eye(numCompEdges);
+
+
+    T(compIndex).scattering=S;
+elseif type == 1 %SERIES
+    adaptValue=0;
+    for i=1:numCompEdges
         if T(compIndex).edges(i) ~= lastVirtualEdge %get all the others
             element_mIndex2 = T(compIndex).edges(i)+1;
-            sum=sum+Z(element_mIndex2);
+            adaptValue=adaptValue+Z(element_mIndex2);
         end
     end
-    Z(element_mIndex)= sum;
+    Z(element_mIndex)= adaptValue;
+
+    Z_values = Z(T(compIndex).edges+1); %Get the values for current comp. Z
+
+    %S=eye(numCompEdges)-2/sum(Z_values)*Z_values(:)*ones(1, numCompEdges);
+
+    %Alternatively
+
+    Z_m = diag(Z_values);
+    B = ones(1, numCompEdges);
+    S=eye(numCompEdges)-2*Z_m*B'*pinv(B*Z_m*B')*B;
+
+
+    T(compIndex).scattering=S;
 elseif type ==2
     %TODO
 end
