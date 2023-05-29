@@ -1,26 +1,58 @@
-%%Code for testing the triconnected components decomposition interface
+close all
+clearvars 
+clc
+addpath utils\
+addpath TriconnectedDecomp\
 
 
 
+%% Parsing netlist and building graph G
 
+netlistFilename = 'Crossover_test1';
+
+
+% Parsing from LTSpice netlist
+
+%CommentStyle option to ignore SPICE directives
+%Range = 2 to ignore first line (specifies Netlist path)
+
+M = readmatrix(strcat('data/netlist/', netlistFilename , '.txt'), 'OutputType', 'string',...
+    'CommentStyle', {'.'}, 'Range', 2);
+
+% Creating circuit graph
+endNodes = M(:, 2:3);
+types = extractBetween(M(:, 1), 1, 1);
+ids = M(:, 1);
+values = M(:, 4);
+EdgeTable = table(endNodes, types, ids, values,...
+'VariableNames',{'EndNodes', 'Type', 'Id', 'Value'});
+G = graph(EdgeTable);
+
+%% Triconnected components decomposition
+
+
+%Prepare data for triconnected component decomposition
 E = table2struct(G.Edges);
 N = table2struct(G.Nodes);
 for i=1:numel(E)
     E(i).EndNodes = convertCharsToStrings(E(i).EndNodes);
 end
 N = string(struct2cell(N));
-[T, numComps] = SQPRTree(E, N);
+[T, numComps] = SQPRTree(E, N); %Call C++ interface
 T = T(1:numComps);
+
+%% Import Input Audio Signal
+[Vin,Fs] = audioread('data/audio/ExpSweep.wav');
+Ts=1/Fs;
+
+%% Adaptation phase
 numEdges = size(E, 1);
-refEdgeIndex = 11; %chosen arbitrarily here, in practice you should give the edge of the non-linear element
+refEdgeIndex = 11; %You should give the edge of the non-linear element
 
-%Also pass the element values for adaptation
-
-
-%NOTE: we need to add a variable parentEdge, which stores the edge
-%used to reach that element. I think this is necessary for the
-%simulation part
 [Tree, Z] = buildTree(T, numEdges, refEdgeIndex, E, Fs);
+
+
+%% Simulation phase
 
 %sort by increasing depth
 [B,I] = sort([Tree.depth]);
@@ -88,11 +120,9 @@ for n=1:numSamples
             edge = edges(j);
             if edge~=component.parentEdge
                 b(edge+1)=component.scattering(j, :)*in(:);
-                if component.depth<maxDepth
-                    %Is this check really needed?
-                    %Is it safe to assign this either way since it will
-                    %simply get replaced, or does it messes up with the
-                    %output reading?
+                if edge>=numEdges %assign only if edge is virtual
+                    %Notice this check is needed if we want the output
+                    %reading to be correct
                     a(edge+1)=b(edge+1);
                 end
             end
@@ -100,10 +130,41 @@ for n=1:numSamples
     end
 
     %Read output
-    VHigh2(n)=(a(9)+b(9))/2;
-    VMid2(n)=(a(6)+b(6))/2;
-    VLow2(n)=(a(1)+b(1))/2;
+    VHigh(n)=(a(9)+b(9))/2;
+    VMid(n)=(a(6)+b(6))/2;
+    VLow(n)=-(a(1)+b(1))/2;
 end
+
+%% Plotting the results
+
+spiceOutLow = audioread('data/audio/outputlow.wav');
+spiceOutMid = audioread('data/audio/outputmid.wav');
+spiceOutHigh = audioread('data/audio/outputhigh.wav');
+
+tSpice = 1/Fs*[1:length(spiceOutLow)];
+tWdf = 1/Fs*[1:numSamples];
+figure
+set(gcf, 'Color', 'w');
+subplot(311)
+plot(tSpice,spiceOutLow,'r','Linewidth',2); hold on;
+plot(tWdf, VLow,'b--','Linewidth',1); grid on;  
+xlabel('time [seconds]','Fontsize',16,'interpreter','latex');
+ylabel('$V_{\mathrm{outLow}}$ [V]','Fontsize',16,'interpreter','latex');
+xlim([0 tSpice(end)]);
+legend('LTspice','WDF','Fontsize',16,'interpreter','latex');
+title('Output Signals','Fontsize',18,'interpreter','latex');
+subplot(312)
+plot(tSpice,spiceOutMid,'r','Linewidth',2); hold on;
+plot(tWdf, VMid,'b--','Linewidth',1); grid on; 
+xlabel('time [seconds]','Fontsize',16,'interpreter','latex');
+ylabel('$V_{\mathrm{outMid}}$ [V]','Fontsize',16,'interpreter','latex');
+xlim([0 tSpice(end)]);
+subplot(313)
+plot(tSpice,spiceOutHigh,'r','Linewidth',2); hold on;
+plot(tWdf, VHigh,'b--','Linewidth',1); grid on; 
+xlabel('time [seconds]','Fontsize',16,'interpreter','latex');
+ylabel('$V_{\mathrm{outHigh}}$ [V]','Fontsize',16,'interpreter','latex');
+xlim([0 tSpice(end)]);
 
 
 

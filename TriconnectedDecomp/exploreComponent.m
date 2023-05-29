@@ -81,12 +81,12 @@ if type == 0 %PARALLEL
     Z_values = Z(T(compIndex).edges+1); %Get the values for current comp. Z
     G_values = 1./Z_values;
 
-    %S=2/sum(G_values)*G_values(:)*ones(1, numCompEdges)-eye(numCompEdges);
+    S=(2/sum(G_values))*ones(numCompEdges, 1)*G_values'-eye(numCompEdges);
 
     %Alternatively
     Z_m = diag(Z_values);
     Q = ones(1, numCompEdges);
-    S=2*Q'*pinv(Q*inv(Z_m)*Q')*Q*inv(Z_m)-eye(numCompEdges);
+    %S=2*Q'*pinv(Q*inv(Z_m)*Q')*Q*inv(Z_m)-eye(numCompEdges);
 
 
     T(compIndex).scattering=S;
@@ -102,13 +102,13 @@ elseif type == 1 %SERIES
 
     Z_values = Z(T(compIndex).edges+1); %Get the values for current comp. Z
 
-    %S=eye(numCompEdges)-2/sum(Z_values)*Z_values(:)*ones(1, numCompEdges);
+    S=eye(numCompEdges)-(2/sum(Z_values))*Z_values(:)*ones(1, numCompEdges);
 
     %Alternatively
 
     Z_m = diag(Z_values);
     B = ones(1, numCompEdges);
-    S=eye(numCompEdges)-2*Z_m*B'*pinv(B*Z_m*B')*B;
+    %S=eye(numCompEdges)-2*Z_m*B'*pinv(B*Z_m*B')*B;
 
 
     T(compIndex).scattering=S;

@@ -1,13 +1,11 @@
-/* MyMEXFunction
-    For testing try to call in MATLAB
-    SQPRTree(); (input not used now)
+/* MEX function developed for integration with the OGDF library
 */
 
 /*
 For compilation:
 mex -O -largeArrayDims -Iogdf/include/ -Iogdf/build/include/ -Logdf -lOGDF -lCOIN SQPRTree.cpp -v
 
-where "tric_matlab" is the folder containing the library source and the
+where "ogdf" is the folder containing the library source and the
 compiled version (built for example using cmake and then visual studio)
 */
 
