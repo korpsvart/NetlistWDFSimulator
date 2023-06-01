@@ -8,7 +8,7 @@ addpath TriconnectedDecomp\
 
 %% Parsing netlist and building graph G
 
-netlistFilename = 'Crossover_test1';
+netlistFilename = 'BridgeT';
 
 
 % Parsing from LTSpice netlist
@@ -38,7 +38,7 @@ for i=1:numel(E)
     E(i).EndNodes = convertCharsToStrings(E(i).EndNodes);
 end
 N = string(struct2cell(N));
-[T, numComps] = SQPRTree(E, N); %Call C++ interface
+[T, numComps, endpoints] = SQPRTree(E, N); %Call C++ interface
 T = T(1:numComps);
 
 %% Import Input Audio Signal
@@ -47,9 +47,9 @@ Ts=1/Fs;
 
 %% Adaptation phase
 numEdges = size(E, 1);
-refEdgeIndex = 11; %You should give the edge of the non-linear element
+refEdgeIndex = 5; %You should give the edge of the non-linear element
 
-[Tree, Z] = buildTree(T, numEdges, refEdgeIndex, E, Fs);
+[Tree, Z] = buildTree(T, numEdges, refEdgeIndex, E, Fs, endpoints);
 
 
 %% Simulation phase

@@ -97,6 +97,12 @@ public:
         ArrayFactory factory; //factory for generating output structs and arrays
         StructArray structArray = factory.createStructArray({1, numberOfComps},{"edges", "type"});
 
+        //Structure for returning the endpoints of the edges
+        //The number of total edges is M+numberOfComps-1
+        //where M is the number of original graph edges
+        TypedArray<int16_t> edgesEndpoints = factory.createArray<int16_t>({G.numberOfEdges()+numberOfComps-1, 2});
+
+
         //Iterate over the triconnected comps
         int k=0; //index for the components (some components may be empty)
         for(int i=0; i<numberOfComps;i++)
@@ -107,11 +113,23 @@ public:
             ogdf::List<ogdf::edge> edgesList = comp.m_edges;
             //Convert edges into some useful representation, and store them
             std::vector<int> edgesIds;
+            std::array<ogdf::node,2> endpoints;
             for(ogdf::edge e : edgesList)
             {
                     std::cout << e->index() << ", endpoints: ";
                     std::cout << e << "\n";
-                  edgesIds.push_back(e->index());
+                    edgesIds.push_back(e->index());
+                    
+
+
+                //Store the endpoints inside the edgesEndpoints structArray
+                //They are stored by index position for easier access
+                endpoints = e->nodes();
+                //Maybe find a way to check if it was already assigned before
+                //Just for efficiency
+                edgesEndpoints[e->index()][0]=endpoints[0]->index();
+                edgesEndpoints[e->index()][1]=endpoints[1]->index();
+
             }
          
             size_t numberOfEdges=edgesIds.size();
@@ -126,6 +144,7 @@ public:
 
         outputs[0] = structArray;
         outputs[1] = factory.createScalar(k); //return also the number of non-empty components
+        outputs[2] = edgesEndpoints;
 
        
     }

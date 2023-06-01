@@ -1,4 +1,4 @@
-function [Tree, Z] = buildTree(T, numEdges, refEdgeIndex, E, Fs)
+function [Tree, Z] = buildTree(T, numEdges, refEdgeIndex, E, Fs, endpoints)
 %Build the SQPR Tree from triconnected components, starting from
 %the reference edge
 
@@ -32,10 +32,10 @@ T(rootCompIndex).parent = -1;
 
 
  %Port impedances vector (diagonal matrix)
-M = max([T.edges]); %find the total number of edges, including virtual ones
+M = max([T.edges])+1; %find the total number of edges, including virtual ones
 Z = zeros(M, 1);
 
-[Tree,Z] = exploreComponent(T, N, numEdges, rootCompIndex, refEdgeIndex, E, Z, Fs, 1);
+[Tree,Z] = exploreComponent(T, N, numEdges, rootCompIndex, refEdgeIndex, E, Z, Fs, 1, endpoints);
 
 
 

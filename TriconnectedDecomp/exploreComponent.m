@@ -1,4 +1,4 @@
-function [T, Z] = exploreComponent(T, N, numEdges, compIndex, lastVirtualEdge, E, Z, Fs, depth)
+function [T, Z] = exploreComponent(T, N, numEdges, compIndex, lastVirtualEdge, E, Z, Fs, depth, endpoints)
 
 %lastVirtualEdge is the virtual edge from which we came to this
 %component (for the root it's the reference edge, so in theory the
@@ -112,8 +112,114 @@ elseif type == 1 %SERIES
 
 
     T(compIndex).scattering=S;
-elseif type ==2
-    %TODO
+elseif type ==2 %RIGID
+
+    %% Rigid component adaptation
+
+
+
+    edges = T(compIndex).edges;
+    edges = edges(edges < numEdges & edges ~= lastVirtualEdge); %remove parentedge
+
+
+    %Create graph object
+
+    endpointsLocal = endpoints(edges+1, :)+1; %offset also indexes of nodes (as needed by matlab)
+    ids = [E.Id];
+    ids = ids(endpointsLocal);
+    edgetable = table(endpointsLocal, ids, 'VariableNames',{'EndNodes', 'Id'});
+    componentGraph = graph(edgetable);
+
+
+
+
+
+    %Remove one of the endpoints of the virtual edge
+    endpointToRemove = endpoints(element_mIndex, 1)+1; %Take the first endpoint, for example
+    referenceEndpoint = endpoints(element_mIndex, 2)+1; %Other become reference
+
+    %We can't use the rmnode function because it will also delete incident
+    %edges, which is not what we want
+    %Instead we must remove the corresponding row. Hopefully matlab sorts
+    %the row according to node indexes, so we can exploit the natural index
+    %ordering...
+
+
+
+    %Get adjacency matrix
+    A = full(incidence(componentGraph));
+    A(endpointToRemove, :) = []; %remove row
+
+
+    %Get G conductance vector (and diag matrix)
+    %We've the Z vector already at our disposal so it's easy
+    G_vector = 1./Z(edges+1);
+    G_m = diag(G_vector);
+
+
+
+    %Compute Y
+    Y = A*G_m*A'; %Admittance matrix
+    Imp = inv(Y); %Impedances matrix
+    %Adaptation
+    Z(element_mIndex)=Imp(referenceEndpoint);
+
+
+    %% Compute scattering matrix for R node
+
+    %Add the virtual edge to the previous graph, since now we need
+    %the complete version
+    componentGraph = addedge(componentGraph, endpoints(lastVirtualEdge+1, 1)+1, endpoints(lastVirtualEdge+1, 2)+1);
+
+    tree = minspantree(componentGraph);
+    At = full(incidence(tree));
+    q = size(At, 2); % q is the number of independent voltages
+
+    %Extract cotree
+
+    %Find edges in the original graph which are part of cotree
+    idx = ismember(componentGraph.Edges.Id, tree.Edges.Id);
+
+    %Convert logical array into sequential indexes
+    idx_n = find(idx);
+
+    %remove edges from original
+    cotree = rmedge(componentGraph, idx_n);
+    Ac = full(incidence(cotree));
+    p = size(Ac, 2); % p is the number of independent currents
+
+    % Computing F
+    F = pinv(At)*Ac; %F has size q x p 
+
+    % Computing B and Q
+    B = [eye(p) -F'];
+    Q = [F eye(q)];
+
+    n = size(orderedEdges, 1);
+    q = size(Q, 1);
+    p = size(B, 1);
+
+    Z_values = Z(T(compIndex).edges+1); %Get the values for current comp. Z
+    Z_m = diag(Z_values);
+
+    if (q <= p)
+       Z_inv = inv(Z_m);
+       S = 2*Q'*inv(Q*Z_inv*Q')*Q*Z_inv - eye(n);
+
+       %According to MATLAb it's faster and more accurate like this
+       %S = 2*Q'*(Q*(Z\Q')\Q)/Z - eye(n);
+     else
+       S = eye(n) - 2*Z_m*B'*inv(B*Z_m*B')*B;
+
+       %Same as above
+       %S = eye(n) - 2*Z*B'*((B*Z*B')\B);
+
+    end
+
+    T(compIndex).scattering=S;
+
+    
+
 end
 
 
