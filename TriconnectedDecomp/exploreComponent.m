@@ -119,15 +119,17 @@ elseif type ==2 %RIGID
 
 
     edges = T(compIndex).edges;
-    edges = edges(edges < numEdges & edges ~= lastVirtualEdge); %remove parentedge
+    parentEdgeEndpoints = endpoints(element_mIndex, :)+1;
+    edges = edges(edges ~= lastVirtualEdge); %remove parentedge
 
 
     %Create graph object
 
     endpointsLocal = endpoints(edges+1, :)+1; %offset also indexes of nodes (as needed by matlab)
-    ids = [E.Id];
-    ids = ids(endpointsLocal);
-    edgetable = table(endpointsLocal, ids, 'VariableNames',{'EndNodes', 'Id'});
+    allNodes = unique(endpointsLocal); %all nodes list
+    [allNodes, nodesI] = sort(allNodes);
+    ids = edges+1;
+    edgetable = table(endpointsLocal, ids', 'VariableNames',{'EndNodes', 'Id'});
     componentGraph = graph(edgetable);
 
 
@@ -135,8 +137,8 @@ elseif type ==2 %RIGID
 
 
     %Remove one of the endpoints of the virtual edge
-    endpointToRemove = endpoints(element_mIndex, 1)+1; %Take the first endpoint, for example
-    referenceEndpoint = endpoints(element_mIndex, 2)+1; %Other become reference
+    endpointToRemove = nodesI(parentEdgeEndpoints(1)); %Take the first endpoint, for example
+    referenceEndpoint =nodesI(parentEdgeEndpoints(2)); %Other become reference
 
     %We can't use the rmnode function because it will also delete incident
     %edges, which is not what we want
@@ -146,14 +148,20 @@ elseif type ==2 %RIGID
 
 
 
+
     %Get adjacency matrix
     A = full(incidence(componentGraph));
     A(endpointToRemove, :) = []; %remove row
 
+    if (referenceEndpoint>endpointToRemove) %shift for removal
+        referenceEndpoint = referenceEndpoint-1;
+    end
+
 
     %Get G conductance vector (and diag matrix)
     %We've the Z vector already at our disposal so it's easy
-    G_vector = 1./Z(edges+1);
+    sortedEdges = sort(edges+1);
+    G_vector = 1./Z(sortedEdges);
     G_m = diag(G_vector);
 
 
@@ -162,14 +170,17 @@ elseif type ==2 %RIGID
     Y = A*G_m*A'; %Admittance matrix
     Imp = inv(Y); %Impedances matrix
     %Adaptation
-    Z(element_mIndex)=Imp(referenceEndpoint);
+    Z(element_mIndex)=Imp(referenceEndpoint, referenceEndpoint);
 
 
     %% Compute scattering matrix for R node
 
+    edges = T(compIndex).edges+1;
+
     %Add the virtual edge to the previous graph, since now we need
     %the complete version
-    componentGraph = addedge(componentGraph, endpoints(lastVirtualEdge+1, 1)+1, endpoints(lastVirtualEdge+1, 2)+1);
+    edgetable = table(parentEdgeEndpoints, lastVirtualEdge+1, 'VariableNames',{'EndNodes', 'Id'});
+    componentGraph = addedge(componentGraph, edgetable);
 
     tree = minspantree(componentGraph);
     At = full(incidence(tree));
@@ -195,11 +206,13 @@ elseif type ==2 %RIGID
     B = [eye(p) -F'];
     Q = [F eye(q)];
 
-    n = size(orderedEdges, 1);
+    n = numCompEdges;
     q = size(Q, 1);
     p = size(B, 1);
 
+    orderedEdges = [cotree.Edges.Variables; tree.Edges.Variables];
     Z_values = Z(T(compIndex).edges+1); %Get the values for current comp. Z
+    Z_values = Z(orderedEdges);
     Z_m = diag(Z_values);
 
     if (q <= p)
@@ -216,7 +229,16 @@ elseif type ==2 %RIGID
 
     end
 
-    T(compIndex).scattering=S;
+    %[~, Ao] = sort(T(compIndex).edges);
+    %Bs=sort(orderedEdges);
+    %S(Ao, :)=Bs;
+    %[sortedEdges, I] = sort(T(compIndex).edges);
+    positions = zeros(numCompEdges, 1);
+    for h=1:numCompEdges
+        positions(h) = find(orderedEdges == edges(h));
+    end
+    T(compIndex).scattering=S(positions, positions);
+    
 
     
 

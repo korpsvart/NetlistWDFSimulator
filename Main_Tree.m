@@ -116,6 +116,7 @@ for n=1:numSamples
         component = Tree(i);
         edges = component.edges;
         in = a(edges+1);
+        %[sortedEdges, I] = sort(edges);
         for j=1:numel(edges)
             edge = edges(j);
             if edge~=component.parentEdge
@@ -130,16 +131,12 @@ for n=1:numSamples
     end
 
     %Read output
-    VHigh(n)=(a(9)+b(9))/2;
-    VMid(n)=(a(6)+b(6))/2;
-    VLow(n)=-(a(1)+b(1))/2;
+    VLow(n)=(a(5)+b(5))/2;
 end
 
 %% Plotting the results
 
-spiceOutLow = audioread('data/audio/outputlow.wav');
-spiceOutMid = audioread('data/audio/outputmid.wav');
-spiceOutHigh = audioread('data/audio/outputhigh.wav');
+spiceOutLow = audioread('data/audio/bridget_vr2.wav');
 
 tSpice = 1/Fs*[1:length(spiceOutLow)];
 tWdf = 1/Fs*[1:numSamples];
@@ -154,17 +151,17 @@ xlim([0 tSpice(end)]);
 legend('LTspice','WDF','Fontsize',16,'interpreter','latex');
 title('Output Signals','Fontsize',18,'interpreter','latex');
 subplot(312)
-plot(tSpice,spiceOutMid,'r','Linewidth',2); hold on;
-plot(tWdf, VMid,'b--','Linewidth',1); grid on; 
-xlabel('time [seconds]','Fontsize',16,'interpreter','latex');
-ylabel('$V_{\mathrm{outMid}}$ [V]','Fontsize',16,'interpreter','latex');
-xlim([0 tSpice(end)]);
-subplot(313)
-plot(tSpice,spiceOutHigh,'r','Linewidth',2); hold on;
-plot(tWdf, VHigh,'b--','Linewidth',1); grid on; 
-xlabel('time [seconds]','Fontsize',16,'interpreter','latex');
-ylabel('$V_{\mathrm{outHigh}}$ [V]','Fontsize',16,'interpreter','latex');
-xlim([0 tSpice(end)]);
+% plot(tSpice,spiceOutMid,'r','Linewidth',2); hold on;
+% plot(tWdf, VMid,'b--','Linewidth',1); grid on; 
+% xlabel('time [seconds]','Fontsize',16,'interpreter','latex');
+% ylabel('$V_{\mathrm{outMid}}$ [V]','Fontsize',16,'interpreter','latex');
+% xlim([0 tSpice(end)]);
+% subplot(313)
+% plot(tSpice,spiceOutHigh,'r','Linewidth',2); hold on;
+% plot(tWdf, VHigh,'b--','Linewidth',1); grid on; 
+% xlabel('time [seconds]','Fontsize',16,'interpreter','latex');
+% ylabel('$V_{\mathrm{outHigh}}$ [V]','Fontsize',16,'interpreter','latex');
+% xlim([0 tSpice(end)]);
 
 
 
