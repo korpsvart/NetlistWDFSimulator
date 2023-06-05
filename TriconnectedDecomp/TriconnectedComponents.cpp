@@ -2,12 +2,20 @@
 */
 
 /*
-For compilation:
-mex -O -largeArrayDims -Iogdf/include/ -Iogdf/build/include/ -Logdf -lOGDF -lCOIN SQPRTree.cpp -v
+For compilation, run the following command inside this file folder:
+mex -DDEBUG -O -largeArrayDims -Iogdf/include/ -Iogdf/build/include/ -Logdf -lOGDF -lCOIN TriconnectedComponents.cpp -v
+(remove -DDEBUG flag to avoid debugging messages)
 
 where "ogdf" is the folder containing the library source and the
 compiled version (built for example using cmake and then visual studio)
 */
+
+
+#ifdef DEBUG 
+#define DEBUG_MSG(x) x
+#else
+#define DEBUG_MSG(x)
+#endif
 
 #include "mex.hpp"
 #include "mexAdapter.hpp"
@@ -27,50 +35,39 @@ using matlab::mex::ArgumentList;
 class MexFunction : public matlab::mex::Function {
 public:
     void operator()(ArgumentList outputs, ArgumentList inputs) {
-        std::cout <<"test\n";
-        //Actual SQPR Tree code
 
         ogdf::Graph G;
 
-
         buildInputGraph(G, inputs);
 
-        //ogdf::GraphIO::write(G, "output-manual.svg", GraphIO::drawSVG);
         buildTriconnectedComps(G, outputs);
-
-
 
     }
 
     void buildInputGraph(ogdf::Graph &G, ArgumentList inputs) {
         matlab::data::StructArray inputEdges = inputs[0];
         matlab::data::StringArray inputNodes = inputs[1];
-        //int n = matlab::data::ArrayDimensions::getNumElement(inputNodes.getDimensions());
-
 
         //Create map for mapping index string name to index number
         //(ogdf library can only identify nodes by their integer index)
         std::map<std::string, ogdf::node> nodesIndexMap;
 
-        //ogdf::node *nodes = (ogdf::node *) malloc( * sizeof(ogdf::node));
         int i =0;
-        std::cout << "Printing nodes: \n";
+        DEBUG_MSG(std::cout << "Printing nodes: \n";)
         for (auto node : inputNodes) {
-            //nodes[i] = G.newNode(i);
-            //nodesIndexMap[inputNodes[i]] = i;
             std::string nodeName = std::string(inputNodes[i]);
-            std::cout << nodeName << "\n";
+            DEBUG_MSG(std::cout << nodeName << "\n";)
             nodesIndexMap[nodeName] = G.newNode(i);
             i++;
         }
 
         i=0;
-        std::cout << "Printing edges: \n";
+        DEBUG_MSG(std::cout << "Printing edges: \n";)
         for (matlab::data::Struct edge : inputEdges) {
             matlab::data::StringArray endpoints = edge["EndNodes"];
             std::string endpointA = std::string(endpoints[0]);
             std::string endpointB = std::string(endpoints[1]);
-            std::cout << "Edge index " << i << ", (" << endpointA << "," << endpointB << ")\n";
+            DEBUG_MSG(std::cout << "Edge index " << i << ", (" << endpointA << "," << endpointB << ")\n";)
             G.newEdge(nodesIndexMap[endpointA], nodesIndexMap[endpointB], i);
             i++;
         }
@@ -82,17 +79,17 @@ public:
     {
 
 
-        std::cout <<  "Printing the graph\n";
+        DEBUG_MSG(std::cout <<  "Printing the graph\n";)
         for(ogdf::edge e : G.edges) {
-            std::cout <<"Edge id(??): " << e->index() << ", endpoints: ";
-            std::cout << e <<"\n";
+            DEBUG_MSG(std::cout <<"Edge id(??): " << e->index() << ", endpoints: ";)
+            DEBUG_MSG(std::cout << e <<"\n";)
         }
         ogdf::Triconnectivity tricComp(G);
 
         //Create output structure
         const char* field_names[] = {"edges", "type"};
         size_t numberOfComps=tricComp.m_numComp;
-        std::cout << "Number of components: " << numberOfComps << "\n";
+        DEBUG_MSG(std::cout << "Number of components: " << numberOfComps << "\n";)
 
         ArrayFactory factory; //factory for generating output structs and arrays
         StructArray structArray = factory.createStructArray({1, numberOfComps},{"edges", "type"});
@@ -107,7 +104,7 @@ public:
         int k=0; //index for the components (some components may be empty)
         for(int i=0; i<numberOfComps;i++)
         {
-            std::cout << "component: " << i << "\n";
+            DEBUG_MSG(std::cout << "component: " << i << "\n";)
             //Get i-th component
             ogdf::Triconnectivity::CompStruct comp = tricComp.m_component[i];
             ogdf::List<ogdf::edge> edgesList = comp.m_edges;
@@ -116,8 +113,8 @@ public:
             std::array<ogdf::node,2> endpoints;
             for(ogdf::edge e : edgesList)
             {
-                    std::cout << e->index() << ", endpoints: ";
-                    std::cout << e << "\n";
+                    DEBUG_MSG(std::cout << e->index() << ", endpoints: ";)
+                    DEBUG_MSG(std::cout << e << "\n";)
                     edgesIds.push_back(e->index());
                     
 
@@ -147,66 +144,6 @@ public:
         outputs[2] = edgesEndpoints;
 
        
-    }
-
-
-    void buildSQPRTree(ogdf::Graph &G, ogdf::edge refEdge, ArgumentList outputs)
-    {
-
-
-        std::cout <<  "Printing the graph\n";
-        for(ogdf::edge e : G.edges) {
-            std::cout <<"Edge id(??): " << e->index() << ", endpoints: ";
-            std::cout << e <<"\n";
-        }
-        
-        
-        
-        ogdf::StaticSPQRTree sqprTree(G);
-
-        //Get root node (node containing component which has the ref edge)
-        ogdf::node rootNode = sqprTree.rootNode();
-
-        //Create output structure
-        const char* field_names[] = {"edges", "type", "children"};
-        size_t numberOfComps = 5; //adjust this
-
-
-        ArrayFactory factory; //factory for generating output structs and arrays
-        StructArray structArray = factory.createStructArray({1, numberOfComps},{"edges", "type", "children"});
-
-
-        //get outgoing edges from root node
-        std::vector<ogdf::edge> outEdges;
-        //rootNode->outEdges(outEdges);
-
-        ogdf::internal::GraphObjectContainer<ogdf::AdjElement> adjEntries = rootNode->adjEntries;
-
-
-
-    }
-
-
-
-    void testSPQRTree()
-    {
-
-        ogdf::Graph G;
-        int n = 2;
-        ogdf::randomBiconnectedGraph(G, 10, 5);
-
-        ogdf::StaticSPQRTree sqprTree(G);
-
-        //Get root node
-        ogdf::node rootNode = sqprTree.rootNode();
-
-        //Get the skeleton
-        ogdf::Skeleton& rootEdgeSkeleton = sqprTree.skeleton(rootNode);
-        //Get corresponding graph
-        ogdf::Graph skelGraph = rootEdgeSkeleton.getGraph();
-        for(ogdf::edge e : skelGraph.edges) {
-            std::cout << e;
-        }
     }
 
     void checkArguments(ArgumentList outputs, ArgumentList inputs) {

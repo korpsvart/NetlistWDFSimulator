@@ -5,7 +5,15 @@ addpath utils
 
 tic
 
-netlistFilename = 'Crossover_test1';
+%% Variables to adjust depending on the netlist
+
+netlistFilename = 'BridgeTSP';
+%Specify the names of the ports to compute the output
+outputPorts = ["R2", "R4"];
+numOutputs = numel(outputPorts);
+
+
+%% Parse topology
 parsingResult = strcat(netlistFilename, '.mat');
 
 [B,Q,G,orderedEdges] = parseTopology(netlistFilename);
@@ -84,39 +92,30 @@ toc
 
 %% Plotting the results
 
-spiceOutLow = audioread('data/audio/outputlow.wav');
-spiceOutMid = audioread('data/audio/outputmid.wav');
-spiceOutHigh = audioread('data/audio/outputhigh.wav');
+spiceOutLow = audioread('data/audio/bridget_vr2p.wav');
 
 ids = orderedEdges(:, 2);
-VLow = -V(ids=='Rspk3', :);
-VMid = V(ids=='Rspk2', :);
-VHigh = V(ids=='Rspk1', :);
+VOut=zeros(numOutputs, Nsamp);
+for i=1:numOutputs
+    VOut(i, :) = V(ids==outputPorts(i), :);
+end
 
 tSpice = 1/Fs*[1:length(spiceOutLow)];
 tWdf = 1/Fs*[1:Nsamp];
 figure
 set(gcf, 'Color', 'w');
-subplot(311)
-plot(tSpice,spiceOutLow,'r','Linewidth',2); hold on;
-plot(tWdf, VLow,'b--','Linewidth',1); grid on;  
-xlabel('time [seconds]','Fontsize',16,'interpreter','latex');
-ylabel('$V_{\mathrm{outLow}}$ [V]','Fontsize',16,'interpreter','latex');
-xlim([0 tSpice(end)]);
-legend('LTspice','WDF','Fontsize',16,'interpreter','latex');
-title('Output Signals','Fontsize',18,'interpreter','latex');
-subplot(312)
-plot(tSpice,spiceOutMid,'r','Linewidth',2); hold on;
-plot(tWdf, VMid,'b--','Linewidth',1); grid on; 
-xlabel('time [seconds]','Fontsize',16,'interpreter','latex');
-ylabel('$V_{\mathrm{outMid}}$ [V]','Fontsize',16,'interpreter','latex');
-xlim([0 tSpice(end)]);
-subplot(313)
-plot(tSpice,spiceOutHigh,'r','Linewidth',2); hold on;
-plot(tWdf, VHigh,'b--','Linewidth',1); grid on; 
-xlabel('time [seconds]','Fontsize',16,'interpreter','latex');
-ylabel('$V_{\mathrm{outHigh}}$ [V]','Fontsize',16,'interpreter','latex');
-xlim([0 tSpice(end)]);
+for i=1:numOutputs
+    subplot(numOutputs, 1, i)
+    plot(tSpice,spiceOutLow,'r','Linewidth',2); hold on;
+    plot(tWdf, VOut(i, :),'b--','Linewidth',1); grid on;  
+    xlabel('time [seconds]','Fontsize',16,'interpreter','latex');
+    ylabel('$V_{\mathrm{outLow}}$ [V]','Fontsize',16,'interpreter','latex');
+    xlim([0 tSpice(end)]);
+    legend('LTspice','WDF','Fontsize',16,'interpreter','latex');
+    title('Output Signals','Fontsize',18,'interpreter','latex');
+end
+
+
 
 
 

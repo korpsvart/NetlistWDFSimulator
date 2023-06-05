@@ -8,10 +8,12 @@ switch type
         a = b;
     case 'L'
         a = -b;
-    case 'V'
+    case 'Vreal'
         a = inputSignal(sampleIndex); %small series resistance value
-    case 'I'
+    case 'Ireal'
         a = 10e9*inputSignal(sampleIndex); % large resistance value
+    case 'V'
+        a = 2*inputSignal(sampleIndex)-b; %Ideal voltage generator
 end
 
 end

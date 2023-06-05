@@ -14,6 +14,7 @@ N = numel(T);
 
 %Add children and parent field to all 
 
+refEdgeIndex = refEdgeIndex-1; %decrease index to start from zero
 for i=1:N
     if any(T(i).edges==refEdgeIndex)
         rootCompIndex = i;

@@ -83,11 +83,6 @@ if type == 0 %PARALLEL
 
     S=(2/sum(G_values))*ones(numCompEdges, 1)*G_values'-eye(numCompEdges);
 
-    %Alternatively
-    Z_m = diag(Z_values);
-    Q = ones(1, numCompEdges);
-    %S=2*Q'*pinv(Q*inv(Z_m)*Q')*Q*inv(Z_m)-eye(numCompEdges);
-
 
     T(compIndex).scattering=S;
 elseif type == 1 %SERIES
@@ -103,13 +98,6 @@ elseif type == 1 %SERIES
     Z_values = Z(T(compIndex).edges+1); %Get the values for current comp. Z
 
     S=eye(numCompEdges)-(2/sum(Z_values))*Z_values(:)*ones(1, numCompEdges);
-
-    %Alternatively
-
-    Z_m = diag(Z_values);
-    B = ones(1, numCompEdges);
-    %S=eye(numCompEdges)-2*Z_m*B'*pinv(B*Z_m*B')*B;
-
 
     T(compIndex).scattering=S;
 elseif type ==2 %RIGID
@@ -129,29 +117,36 @@ elseif type ==2 %RIGID
     allNodes = unique(endpointsLocal); %all nodes list
     [allNodes, nodesI] = sort(allNodes);
     ids = edges+1;
-    edgetable = table(endpointsLocal, ids', 'VariableNames',{'EndNodes', 'Id'});
+    %It's important to ALWAYS pass the endpoints as STRINGS and not
+    %integers when creating a graph. If we use integers MATLAB interpret
+    %them as node indexes and not node names, and it will "fill" the
+    %missing indexes creating spurious unconnected nodes in the graph
+    edgetable = table(string(endpointsLocal), ids', 'VariableNames',{'EndNodes', 'Id'});
+    %nodeTable = table(string(allNodes),'VariableNames',{'Name'});
     componentGraph = graph(edgetable);
 
 
-
-
-
     %Remove one of the endpoints of the virtual edge
-    endpointToRemove = nodesI(parentEdgeEndpoints(1)); %Take the first endpoint, for example
-    referenceEndpoint =nodesI(parentEdgeEndpoints(2)); %Other become reference
-
-    %We can't use the rmnode function because it will also delete incident
-    %edges, which is not what we want
-    %Instead we must remove the corresponding row. Hopefully matlab sorts
-    %the row according to node indexes, so we can exploit the natural index
-    %ordering...
+    endpointToRemove = find(allNodes == parentEdgeEndpoints(1));
+    referenceEndpoint =find(allNodes == parentEdgeEndpoints(2));
+    %endpointToRemove = nodesI(parentEdgeEndpoints(1)); %Take the first endpoint, for example
+    %referenceEndpoint =nodesI(parentEdgeEndpoints(2)); %Other become reference
 
 
 
 
     %Get adjacency matrix
     A = full(incidence(componentGraph));
+
+
+    %We can't use the rmnode function because it will also delete incident
+    %edges, which is not what we want
+    %Instead we must remove the corresponding row. Hopefully matlab sorts
+    %the row according to node indexes, so we can exploit the natural index
+    %ordering...
     A(endpointToRemove, :) = []; %remove row
+
+
 
     if (referenceEndpoint>endpointToRemove) %shift for removal
         referenceEndpoint = referenceEndpoint-1;
@@ -179,7 +174,7 @@ elseif type ==2 %RIGID
 
     %Add the virtual edge to the previous graph, since now we need
     %the complete version
-    edgetable = table(parentEdgeEndpoints, lastVirtualEdge+1, 'VariableNames',{'EndNodes', 'Id'});
+    edgetable = table(string(parentEdgeEndpoints), lastVirtualEdge+1, 'VariableNames',{'EndNodes', 'Id'});
     componentGraph = addedge(componentGraph, edgetable);
 
     tree = minspantree(componentGraph);
@@ -211,7 +206,6 @@ elseif type ==2 %RIGID
     p = size(B, 1);
 
     orderedEdges = [cotree.Edges.Variables; tree.Edges.Variables];
-    Z_values = Z(T(compIndex).edges+1); %Get the values for current comp. Z
     Z_values = Z(orderedEdges);
     Z_m = diag(Z_values);
 
@@ -229,10 +223,7 @@ elseif type ==2 %RIGID
 
     end
 
-    %[~, Ao] = sort(T(compIndex).edges);
-    %Bs=sort(orderedEdges);
-    %S(Ao, :)=Bs;
-    %[sortedEdges, I] = sort(T(compIndex).edges);
+    
     positions = zeros(numCompEdges, 1);
     for h=1:numCompEdges
         positions(h) = find(orderedEdges == edges(h));

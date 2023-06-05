@@ -1,0 +1,13 @@
+* /Users/pelufrapa/Documents/LTspice/BridgeT.asc
+C1 P001 N002 3µ
+C2 N001 N003 0.1µ
+R1 N003 0 1k
+R2 N002 0 2k
+R3 N001 N002 5k
+Vin N001 0 wavefile = ExpSweep.wav
+R4 N002 0 2.5k
+R5 P001 N003 1k
+.tran 2s
+.wave "BridgeT_Vr2P.wav" 16 192k V(n002)
+.backanno
+.end
