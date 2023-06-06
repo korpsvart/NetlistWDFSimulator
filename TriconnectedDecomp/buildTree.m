@@ -1,4 +1,4 @@
-function [Tree, Z] = buildTree(T, numEdges, refEdgeIndex, E, Fs, endpoints)
+function [Tree, Z, S] = buildTree(T, numEdges, refEdgeIndex, E, Fs, endpoints)
 %Build the SQPR Tree from triconnected components, starting from
 %the reference edge
 
@@ -36,7 +36,12 @@ T(rootCompIndex).parent = -1;
 M = max([T.edges])+1; %find the total number of edges, including virtual ones
 Z = zeros(M, 1);
 
-[Tree,Z] = exploreComponent(T, N, numEdges, rootCompIndex, refEdgeIndex, E, Z, Fs, 1, endpoints);
+%"Giant" scattering matrix
+%Find highest number of edges for a single comp
+L = max(arrayfun(@(x) numel(x.edges),T));
+S = zeros(M, L);
+
+[Tree,Z, S] = exploreComponent(T, N, numEdges, rootCompIndex, refEdgeIndex, E, Z, Fs, 1, endpoints, S);
 
 
 

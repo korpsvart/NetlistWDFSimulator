@@ -1,4 +1,4 @@
-function [T, Z] = exploreComponent(T, N, numEdges, compIndex, lastVirtualEdge, E, Z, Fs, depth, endpoints)
+function [T, Z, overallS] = exploreComponent(T, N, numEdges, compIndex, lastVirtualEdge, E, Z, Fs, depth, endpoints, overallS)
 
 %lastVirtualEdge is the virtual edge from which we came to this
 %component (for the root it's the reference edge, so in theory the
@@ -27,7 +27,7 @@ for i=1:numCompEdges
                     T(compIndex).children = [j, T(compIndex).children];
                     T(j).parent = compIndex;
                     %Recursive call
-                    [T, Z] = exploreComponent(T, N, numEdges, j, T(compIndex).edges(i), E, Z, Fs, depth+1);
+                    [T, Z, overallS] = exploreComponent(T, N, numEdges, j, T(compIndex).edges(i), E, Z, Fs, depth+1, endpoints, overallS);
                     break;
                 end
             end
@@ -83,6 +83,9 @@ if type == 0 %PARALLEL
 
     S=(2/sum(G_values))*ones(numCompEdges, 1)*G_values'-eye(numCompEdges);
 
+    S = [S, zeros(numCompEdges, size(overallS,2)-numCompEdges)]; %zero-pad
+    overallS(T(compIndex).edges+1, :) = S;
+
 
     T(compIndex).scattering=S;
 elseif type == 1 %SERIES
@@ -98,6 +101,9 @@ elseif type == 1 %SERIES
     Z_values = Z(T(compIndex).edges+1); %Get the values for current comp. Z
 
     S=eye(numCompEdges)-(2/sum(Z_values))*Z_values(:)*ones(1, numCompEdges);
+
+    S = [S, zeros(numCompEdges, size(overallS,2)-numCompEdges)]; %zero-pad
+    overallS(T(compIndex).edges+1, :) = S;
 
     T(compIndex).scattering=S;
 elseif type ==2 %RIGID
@@ -222,6 +228,10 @@ elseif type ==2 %RIGID
        %S = eye(n) - 2*Z*B'*((B*Z*B')\B);
 
     end
+
+
+    S = [S, zeros(numCompEdges, size(overallS,2)-numCompEdges)]; %zero-pad
+    overallS(orderedEdges, :) = S;
 
     
     positions = zeros(numCompEdges, 1);

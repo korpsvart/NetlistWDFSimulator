@@ -57,7 +57,7 @@ Ts=1/Fs;
 %% Adaptation phase
 numEdges = size(E, 1);
 
-[Tree, Z] = buildTree(T, numEdges, refEdgeIndex, E, Fs, endpoints);
+[Tree, Z, S] = buildTree(T, numEdges, refEdgeIndex, E, Fs, endpoints);
 
 
 %% Simulation phase
@@ -120,7 +120,7 @@ for n=1:numSamples
         %(the actual forward scan)
         %The edge is the one going up (parentEdge)
         edge = component.parentEdge;
-        parentEdgeIndex = find(edges==edge);
+        %parentEdgeIndex = find(edges==edge);
         %Take all incoming waves
         %(Easier to take also the values we don't need, anyway if the
         %scattering matrix was built correctly it will be ignored)
@@ -134,7 +134,7 @@ for n=1:numSamples
         %require all rows to have same length (which is possible
         %only if we find a way to make the algorithm return only
         %3 elements components)
-        b(edge+1)=component.scattering(parentEdgeIndex, :)*in(:);
+        b(edge+1)=S(edge+1, 1:numel(in))*in(:);
         a(edge+1)=b(edge+1); %should be avoided for the root, but it should do no damage anyway
 
 
@@ -153,11 +153,11 @@ for n=1:numSamples
         component = Tree(i);
         edges = component.edges;
         in = a(edges+1);
-        k=1:numel(edges);
+        %k=1:numel(edges);
         indexes = edges~=component.parentEdge;
-        k=k(indexes);
+        %k=k(indexes);
         edges = edges(indexes);
-        b(edges+1)=component.scattering(k, :)*in(:);
+        b(edges+1)=S(edges+1, 1:numel(in))*in(:);
         virtualEdges = edges(edges>=numEdges);
         a(virtualEdges+1) = b(virtualEdges+1);
         % for j=1:numel(edges)
