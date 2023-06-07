@@ -67,7 +67,7 @@ switch types(i)
     case 'Ireal'
         funcs{i} = @(b, Vin, ii) 10e9*Vin(ii); % large resistance value
     case 'V'
-        funcs{i} = @(b, Vin, ii) 2*Vin(ii)-b; % large resistance value
+        funcs{i} = @(b, Vin, ii) 2*Vin(ii)-b; % ideal voltage source
 end
 end
 
