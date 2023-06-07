@@ -83,11 +83,13 @@ if type == 0 %PARALLEL
 
     S=(2/sum(G_values))*ones(numCompEdges, 1)*G_values'-eye(numCompEdges);
 
+
     S = [S, zeros(numCompEdges, size(overallS,2)-numCompEdges)]; %zero-pad
     overallS(T(compIndex).edges+1, :) = S;
 
+    %Save the scattering row for the parent edge, going up
+    T(compIndex).scatteringUp=overallS(element_mIndex, :);
 
-    T(compIndex).scattering=S;
 elseif type == 1 %SERIES
     adaptValue=0;
     for i=1:numCompEdges
@@ -102,10 +104,13 @@ elseif type == 1 %SERIES
 
     S=eye(numCompEdges)-(2/sum(Z_values))*Z_values(:)*ones(1, numCompEdges);
 
+
     S = [S, zeros(numCompEdges, size(overallS,2)-numCompEdges)]; %zero-pad
     overallS(T(compIndex).edges+1, :) = S;
 
-    T(compIndex).scattering=S;
+    %Save the scattering row for the parent edge, going up
+    T(compIndex).scatteringUp=overallS(element_mIndex, :);
+
 elseif type ==2 %RIGID
 
     %% Rigid component adaptation
@@ -230,15 +235,21 @@ elseif type ==2 %RIGID
     end
 
 
-    S = [S, zeros(numCompEdges, size(overallS,2)-numCompEdges)]; %zero-pad
-    overallS(orderedEdges, :) = S;
 
-    
+
     positions = zeros(numCompEdges, 1);
     for h=1:numCompEdges
         positions(h) = find(orderedEdges == edges(h));
     end
-    T(compIndex).scattering=S(positions, positions);
+    S=S(positions, positions); %re-order S
+
+    S = [S, zeros(numCompEdges, size(overallS,2)-numCompEdges)]; %zero-pad
+    overallS(T(compIndex).edges+1, :) = S;
+
+    %Save the scattering row for the parent edge, going up
+    T(compIndex).scatteringUp=overallS(element_mIndex, :);
+
+   
     
 
     

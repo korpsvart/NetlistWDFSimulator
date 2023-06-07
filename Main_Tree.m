@@ -57,8 +57,9 @@ Ts=1/Fs;
 %% Adaptation phase
 numEdges = size(E, 1);
 
+tic
 [Tree, Z, S] = buildTree(T, numEdges, refEdgeIndex, E, Fs, endpoints);
-
+toc
 
 %% Simulation phase
 
@@ -100,6 +101,7 @@ end
 numSamples = numel(Vin);
 VOut = zeros(numOutputs, numSamples);
 maxDepth = Tree(end).depth;
+tic
 for n=1:numSamples
     %Forward scan
     for i=numComps:-1:1
@@ -112,8 +114,6 @@ for n=1:numSamples
         realEdges = edges(edges<numEdges & edges~=component.parentEdge);
         for j=1:numel(realEdges)
            edge = realEdges(j);
-           %element = E(edge+1);
-           %a(edge+1) = get_a_element(element, b(edge+1), n, Vin);
            a(edge+1) = funcs{edge+1}(b(edge+1), Vin, n);
         end
         %Compute junction reflected waves
@@ -125,24 +125,14 @@ for n=1:numSamples
         %(Easier to take also the values we don't need, anyway if the
         %scattering matrix was built correctly it will be ignored)
         in = a(edges+1);
-  
-        %For the moment we store an individual scattering matrix
-        %for each component, and the row associated is the one
-        %given by the ordering of the edges inside the component.
-        %It would be nice to have a single "giant" matrix S
-        %where each row corresponds to an edge, but this would
-        %require all rows to have same length (which is possible
-        %only if we find a way to make the algorithm return only
-        %3 elements components)
-        b(edge+1)=S(edge+1, 1:numel(in))*in(:);
+
+        b(edge+1)=component.scatteringUp(1:numel(in))*in(:);
         a(edge+1)=b(edge+1); %should be avoided for the root, but it should do no damage anyway
 
 
     end
 
     %Root scattering
-    %element = E(edge+1);
-    %b(edge+1)=get_a_element(element, b(edge+1), n, Vin);
     b(edge+1)=funcs{edge+1}(b(edge+1), Vin, n);
     a(edge+1)=b(edge+1);
 
@@ -153,29 +143,17 @@ for n=1:numSamples
         component = Tree(i);
         edges = component.edges;
         in = a(edges+1);
-        %k=1:numel(edges);
         indexes = edges~=component.parentEdge;
-        %k=k(indexes);
         edges = edges(indexes);
         b(edges+1)=S(edges+1, 1:numel(in))*in(:);
         virtualEdges = edges(edges>=numEdges);
         a(virtualEdges+1) = b(virtualEdges+1);
-        % for j=1:numel(edges)
-        %     edge = edges(j);
-        %     if edge~=component.parentEdge
-        %         b(edge+1)=component.scattering(j, :)*in(:);
-        %         if edge>=numEdges %assign only if edge is virtual
-        %             %Notice this check is needed if we want the output
-        %             %reading to be correct
-        %             a(edge+1)=b(edge+1);
-        %         end
-        %     end
-        % end
     end
 
     %Read output
     VOut(:, n)=(a(outputPorts)+b(outputPorts))/2;
 end
+toc
 
 %% Plotting the results
 
