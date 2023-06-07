@@ -18,9 +18,9 @@ for i=1:n
             v(i) = 1/(Fs*2*value);
         case 'L'
             v(i) = Fs*2*value;
-        case 'V'
+        case 'Vreal'
             v(i) = 10e-6; % small series resistance value
-        case 'I'
+        case 'Ireal'
             v(i) = 10e9; % large resistance value
     end
 end

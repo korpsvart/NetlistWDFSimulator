@@ -22,7 +22,7 @@ parsingResult = strcat(netlistFilename, '.mat');
 [Vin,Fs] = audioread('data/audio/ExpSweep.wav');
 Ts=1/Fs;
 
-[Z, S] = get_Z_S(netlistFilename,B,Q,orderedEdges,Fs);
+[Z, S] = get_Z_S(netlistFilename,B,Q,orderedEdges,Fs, G,"Vin");
 
 
 toc
@@ -61,10 +61,12 @@ switch types(i)
         funcs{i} = @(b, Vin, ii) b;
     case 'L'
         funcs{i} = @(b, Vin, ii) -b;
-    case 'V'
+    case 'Vreal'
         funcs{i} = @(b, Vin, ii) Vin(ii); %small series resistance value
-    case 'I'
+    case 'Ireal'
         funcs{i} = @(b, Vin, ii) 10e9*Vin(ii); % large resistance value
+    case 'V'
+        funcs{i} = @(b, Vin, ii) 2*Vin(ii)-b; % large resistance value
 end
 end
 

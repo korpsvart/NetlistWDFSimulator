@@ -1,4 +1,4 @@
-function [Z, S] = get_Z_S(netlistFilename,B,Q, orderedEdges, Fs_signal)
+function [Z, S] = get_Z_S(netlistFilename,B,Q, orderedEdges, Fs_signal, G, refEdgeId)
 
 parsingResult = strcat(netlistFilename, '_Z_S.mat');
 
@@ -32,7 +32,71 @@ end
 %% Computing Scattering Matrix
 if (~previousParsingLoaded || updated)
     
+    adaptableEdgesIndexes = orderedEdges(:, 2)~=refEdgeId;
     Z = getZ(orderedEdges, Fs_signal);
+    adaptableEdgesIds = orderedEdges(adaptableEdgesIndexes, 2);
+    Z_diag = diag(Z);
+    Z_adapted = Z_diag(adaptableEdgesIndexes);
+
+
+    %%%%%%%%%%%%%%%%%%
+    % Compute the Z for the non-adaptable element
+
+    %get endpoints info
+    endpoints = G.Edges.EndNodes;
+    refEdgeIndex = find(G.Edges.Id == refEdgeId);
+    refEdgeEndpoints = endpoints(refEdgeIndex, :);
+    allNodes = unique(endpoints); %all nodes list
+    [allNodes, nodesI] = sort(allNodes);
+    allNodes = convertCharsToStrings(allNodes);
+
+    Gprime = rmedge(G, refEdgeIndex);
+
+    endpointToRemove = find(allNodes == refEdgeEndpoints(1));
+    referenceEndpoint =find(allNodes == refEdgeEndpoints(2));
+
+    A = full(incidence(Gprime));
+    A(endpointToRemove, :) = [];
+
+    if (referenceEndpoint>endpointToRemove) %shift for removal
+        referenceEndpoint = referenceEndpoint-1;
+    end
+
+    %Reorder Z_adapted according to graph edges ordering
+    Z_reordered = zeros(size(Z_adapted, 1), 1);
+    for h=1:size(Z_adapted, 1)
+        Z_reordered(h)= Z_adapted(Gprime.Edges.Id(h)==adaptableEdgesIds);
+    end
+
+    G_vector = 1./Z_reordered;
+    G_m = diag(G_vector);
+
+    %Compute Y
+    Y = A*G_m*A'; %Admittance matrix
+    Imp = inv(Y); %Impedances matrix
+    %Adaptation
+    Z_diag(~adaptableEdgesIndexes)=Imp(referenceEndpoint, referenceEndpoint);
+    Z = diag(Z_diag);
+
+    %reorder columns of A
+    % positions = zeros(size(A, 2), 1);
+    % for h=1:size(A, 2);
+    %     positions(h) = find(orderedEdges == edges(h));
+    % end
+    % A
+
+
+
+
+
+
+
+
+
+
+    %%%%%%%%%%%%%%%%%%%
+
+
    
     if (q <= p)
        Z_inv = inv(Z);
