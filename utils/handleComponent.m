@@ -1,4 +1,4 @@
-function [T, Z, overallS] = exploreComponent(T, N, numEdges, compIndex, lastVirtualEdge, E, Z, Fs, depth, endpoints, overallS)
+function [T, Z, overallS] = handleComponent(T, N, numEdges, compIndex, lastVirtualEdge, E, Z, Fs, depth, endpoints, overallS)
 
 %lastVirtualEdge is the virtual edge from which we came to this
 %component (for the root it's the reference edge, so in theory the
@@ -27,7 +27,7 @@ for i=1:numCompEdges
                     T(compIndex).children = [j, T(compIndex).children];
                     T(j).parent = compIndex;
                     %Recursive call
-                    [T, Z, overallS] = exploreComponent(T, N, numEdges, j, T(compIndex).edges(i), E, Z, Fs, depth+1, endpoints, overallS);
+                    [T, Z, overallS] = handleComponent(T, N, numEdges, j, T(compIndex).edges(i), E, Z, Fs, depth+1, endpoints, overallS);
                     break;
                 end
             end
@@ -52,7 +52,7 @@ for i=1:numCompEdges
         %Get corresponding MATLAB index for the edge
         element_mIndex = T(compIndex).edges(i)+1;
         element = E(element_mIndex);
-        Z(element_mIndex) = getZ_element(element, Fs);
+        Z(element_mIndex) = getZElement(element, Fs);
     end
 
 end

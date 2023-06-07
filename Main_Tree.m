@@ -2,7 +2,7 @@ close all
 clearvars 
 clc
 addpath utils\
-addpath TriconnectedDecomp\
+addpath triconnectedDecomp\
 
 %% Variables to adjust depending on the netlist
 
@@ -58,7 +58,7 @@ Ts=1/Fs;
 numEdges = size(E, 1);
 
 tic
-[Tree, Z, S] = buildTree(T, numEdges, refEdgeIndex, E, Fs, endpoints);
+[Tree, Z, S] = getZSFromTriconnected(T, numEdges, refEdgeIndex, E, Fs, endpoints);
 toc
 
 %% Simulation phase

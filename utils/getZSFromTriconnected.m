@@ -1,4 +1,4 @@
-function [Tree, Z, S] = buildTree(T, numEdges, refEdgeIndex, E, Fs, endpoints)
+function [Tree, Z, S] = getZSFromTriconnected(T, numEdges, refEdgeIndex, E, Fs, endpoints)
 %Build the SQPR Tree from triconnected components, starting from
 %the reference edge
 
@@ -41,7 +41,7 @@ Z = zeros(M, 1);
 L = max(arrayfun(@(x) numel(x.edges),T));
 S = zeros(M, L);
 
-[Tree,Z, S] = exploreComponent(T, N, numEdges, rootCompIndex, refEdgeIndex, E, Z, Fs, 1, endpoints, S);
+[Tree,Z, S] = handleComponent(T, N, numEdges, rootCompIndex, refEdgeIndex, E, Z, Fs, 1, endpoints, S);
 
 
 

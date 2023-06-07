@@ -8,6 +8,7 @@ tic
 %% Variables to adjust depending on the netlist
 
 netlistFilename = 'BridgeTSP';
+refEdgeId = "Vin"; %id of the edge corresponding to non-adaptable element
 %Specify the names of the ports to compute the output
 outputPorts = ["R2", "R4"];
 numOutputs = numel(outputPorts);
@@ -22,7 +23,7 @@ parsingResult = strcat(netlistFilename, '.mat');
 [Vin,Fs] = audioread('data/audio/ExpSweep.wav');
 Ts=1/Fs;
 
-[Z, S] = get_Z_S(netlistFilename,B,Q,orderedEdges,Fs, G,"Vin");
+[Z, S] = getZS(netlistFilename,B,Q,orderedEdges,Fs, G,refEdgeId);
 
 
 toc

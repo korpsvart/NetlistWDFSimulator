@@ -1,4 +1,4 @@
-function [Z] = getZ_element(element, Fs)
+function [Z] = getZElement(element, Fs)
 
 %Get adaptation for one single element
 

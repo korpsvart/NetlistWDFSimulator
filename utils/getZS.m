@@ -1,4 +1,4 @@
-function [Z, S] = get_Z_S(netlistFilename,B,Q, orderedEdges, Fs_signal, G, refEdgeId)
+function [Z, S] = getZS(netlistFilename,B,Q, orderedEdges, Fs_signal, G, refEdgeId)
 
 parsingResult = strcat(netlistFilename, '_Z_S.mat');
 
