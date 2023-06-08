@@ -32,11 +32,7 @@ Z = zeros(M, 1);
 
 %S will contain the rows of the scattering matrix assembled into a single
 %big matrix, where the scattering row for element (edge) i
-%is found at S(i, :).
-%However, virtual edges are shared by 2 components and share the same row.
-%So we only store in S the row for the backward scan (i.e. the one
-%belonging to the element higher in the tree), while the one for the
-%foward scan is stored in the Tree.scatterinUp field.
+%is found at S(i, :). H
 L = max(arrayfun(@(x) numel(x.edges),T));
 S = zeros(M, L);
 

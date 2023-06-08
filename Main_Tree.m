@@ -120,7 +120,6 @@ for n=1:numSamples
         %(the actual forward scan)
         %The edge is the one going up (parentEdge)
         edge = component.parentEdge;
-        %parentEdgeIndex = find(edges==edge);
         %Take all incoming waves
         %(Easier to take also the values we don't need, anyway if the
         %scattering matrix was built correctly it will be ignored)

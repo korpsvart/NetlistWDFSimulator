@@ -78,26 +78,10 @@ if (~previousParsingLoaded || updated)
     Z_diag(~adaptableEdgesIndexes)=Imp(referenceEndpoint, referenceEndpoint);
     Z = diag(Z_diag);
 
-    %reorder columns of A
-    % positions = zeros(size(A, 2), 1);
-    % for h=1:size(A, 2);
-    %     positions(h) = find(orderedEdges == edges(h));
-    % end
-    % A
-
-
-
-
-
-
-
-
-
 
     %%%%%%%%%%%%%%%%%%%
 
-
-   
+    
     if (q <= p)
        Z_inv = inv(Z);
        S = 2*Q'*inv(Q*Z_inv*Q')*Q*Z_inv - eye(n);

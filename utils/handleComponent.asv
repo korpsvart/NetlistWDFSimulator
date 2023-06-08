@@ -19,11 +19,13 @@ for i=1:numCompEdges
         %Find the other component with the same virtual edge
         found=false;
         for j=1:N
-            if isempty(T(j).parentEdge) %to skip already explored nodes
+            if isempty(T(j).children) && isempty(T(j).parent) %to skip already explored nodes
                 if any(T(j).edges == T(compIndex).edges(i))
                     %They share the same virtual edge =>
                     %link the components in the tree
                     found = true;
+                    T(compIndex).children = [j, T(compIndex).children];
+                    T(j).parent = compIndex;
                     %Recursive call
                     [T, Z, overallS] = handleComponent(T, N, numEdges, j, T(compIndex).edges(i), E, Z, Fs, depth+1, endpoints, overallS);
                     break;
