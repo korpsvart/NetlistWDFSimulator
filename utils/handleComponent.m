@@ -20,6 +20,9 @@ for i=1:numCompEdges
         found=false;
         for j=1:N
             if isempty(T(j).parentEdge) %to skip already explored nodes
+                %(The check above is probably superfluous, since I don't
+                %think there is any way to explore an already seen
+                %component, if we already skip the parent)
                 if any(T(j).edges == T(compIndex).edges(i))
                     %They share the same virtual edge =>
                     %link the components in the tree
