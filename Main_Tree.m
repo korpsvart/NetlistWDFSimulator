@@ -9,11 +9,12 @@ addpath triconnectedDecomp\
 netlistFilename = 'BridgeTSP';
 %refEdgeIndex is the index of the edge corresponding to non-adaptable element
 %(Starting from 1 in the netlist)
-refEdgeIndex = 6;
+refEdgeId = "Vin";
 %Specify the indexes of the ports you want to compute the output for
 %(Starting from 1 in the netlist)
-outputPorts = [4, 7];
-numOutputs = numel(outputPorts);
+outputPortsIds = ["R2", "R4"];
+numOutputs = numel(outputPortsIds);
+
 
 
 
@@ -36,6 +37,13 @@ values = M(:, 4);
 EdgeTable = table(endNodes, types, ids, values,...
 'VariableNames',{'EndNodes', 'Type', 'Id', 'Value'});
 G = graph(EdgeTable);
+
+refEdgeIndex = find(EdgeTable.Id==refEdgeId);
+outputPorts = zeros(1, numOutputs);
+for i=1:numOutputs
+    outputPorts(i) = find(EdgeTable.Id==outputPortsIds(i));
+end
+
 
 %% Triconnected components decomposition
 
