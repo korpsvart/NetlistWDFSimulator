@@ -11,6 +11,9 @@ netlistFilename = 'BridgeTSP';
 refEdgeId = "Vin"; %id of the edge corresponding to non-adaptable element
 %Specify the names of the ports to compute the output
 outputPorts = ["R2", "R4"];
+%Specify the reference signals filenames for results validation, if you
+%have any (for example output from LTSpice). Leave empty if not used
+referenceSignalFilenames = ["data/audio/bridget_vr2p.wav", "data/audio/bridget_vr2p.wav"];
 numOutputs = numel(outputPorts);
 
 
@@ -95,7 +98,15 @@ toc
 
 %% Plotting the results
 
-spiceOutLow = audioread('data/audio/bridget_vr2p.wav');
+if (~isempty(referenceSignalFilenames))
+    for k=1:numel(referenceSignalFilenames)
+        referenceSignal(k, :) = audioread(referenceSignalFilenames(k));
+    end
+    tReference = 1/Fs*[1:size(referenceSignal, 2)];
+    legends = ["Reference","WDF"];
+else
+    legends = ["WDF"];
+end
 
 ids = orderedEdges(:, 2);
 VOut=zeros(numOutputs, Nsamp);
@@ -103,18 +114,19 @@ for i=1:numOutputs
     VOut(i, :) = V(ids==outputPorts(i), :);
 end
 
-tSpice = 1/Fs*[1:length(spiceOutLow)];
 tWdf = 1/Fs*[1:Nsamp];
 figure
 set(gcf, 'Color', 'w');
 for i=1:numOutputs
     subplot(numOutputs, 1, i)
-    plot(tSpice,spiceOutLow,'r','Linewidth',2); hold on;
-    plot(tWdf, VOut(i, :),'b--','Linewidth',1); grid on;  
+    if (~isempty(referenceSignalFilenames))
+        plot(tReference,referenceSignal(i, :),'r','Linewidth',2); hold on;
+    end
+    plot(tWdf, VOut(i, :),'b--','Linewidth',1); grid on;
     xlabel('time [seconds]','Fontsize',16,'interpreter','latex');
     ylabel('$V_{\mathrm{outLow}}$ [V]','Fontsize',16,'interpreter','latex');
-    xlim([0 tSpice(end)]);
-    legend('LTspice','WDF','Fontsize',16,'interpreter','latex');
+    xlim([0 tWdf(end)]);
+    legend(legends, "Fontsize",16,"interpreter","latex");
     title('Output Signals','Fontsize',18,'interpreter','latex');
 end
 
