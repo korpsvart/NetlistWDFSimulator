@@ -45,22 +45,29 @@ if (~previousParsingLoaded || updated)
     %get endpoints info
     endpoints = G.Edges.EndNodes;
     refEdgeIndex = find(G.Edges.Id == refEdgeId);
-    refEdgeEndpoints = endpoints(refEdgeIndex, :);
-    allNodes = unique(endpoints); %all nodes list
-    [allNodes, nodesI] = sort(allNodes);
-    allNodes = convertCharsToStrings(allNodes);
+    refEdgeEndpoints = convertCharsToStrings(endpoints(refEdgeIndex, :));
+    % allNodes = unique(endpoints); %all nodes list
+    % [allNodes, nodesI] = sort(allNodes);
+    % allNodes = convertCharsToStrings(allNodes);
 
     Gprime = rmedge(G, refEdgeIndex);
+    % [~, order] = sort(Gprime.Nodes.Variables);
+    % Gprime = reordernodes(Gprime, order);
 
-    endpointToRemove = find(allNodes == refEdgeEndpoints(1));
-    referenceEndpoint =find(allNodes == refEdgeEndpoints(2));
+    graphNodesOrder = convertCharsToStrings(Gprime.Nodes.Variables);
+
+    i1 = find(graphNodesOrder == refEdgeEndpoints(1));
+    i2 =find(graphNodesOrder == refEdgeEndpoints(2));
+
+    endpointToRemove = max([i1, i2]);
+    referenceEndpoint = min([i1, i2]);
 
     A = full(incidence(Gprime));
     A(endpointToRemove, :) = [];
 
-    if (referenceEndpoint>endpointToRemove) %shift for removal
-        referenceEndpoint = referenceEndpoint-1;
-    end
+    % if (referenceEndpoint>endpointToRemove) %shift for removal
+    %     referenceEndpoint = referenceEndpoint-1;
+    % end
 
     %Reorder Z_adapted according to graph edges ordering
     Z_reordered = zeros(size(Z_adapted, 1), 1);

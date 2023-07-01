@@ -139,16 +139,19 @@ elseif type ==2 %RIGID
 
 
     %Remove one of the endpoints of the virtual edge
-    endpointToRemove = find(allNodes == parentEdgeEndpoints(1));
-    referenceEndpoint =find(allNodes == parentEdgeEndpoints(2));
+    i1 = find(allNodes == parentEdgeEndpoints(1));
+    i2 = find(allNodes == parentEdgeEndpoints(2));
     %endpointToRemove = nodesI(parentEdgeEndpoints(1)); %Take the first endpoint, for example
     %referenceEndpoint =nodesI(parentEdgeEndpoints(2)); %Other become reference
 
+    endpointToRemove = max([i1, i2]);
+    referenceEndpoint = min([i1, i2]);
 
 
 
     %Get adjacency matrix
     A = full(incidence(componentGraph));
+    A = A(nodesI, :);
 
 
     %We can't use the rmnode function because it will also delete incident
@@ -160,15 +163,18 @@ elseif type ==2 %RIGID
 
 
 
-    if (referenceEndpoint>endpointToRemove) %shift for removal
-        referenceEndpoint = referenceEndpoint-1;
-    end
+    % if (referenceEndpoint>endpointToRemove) %shift for removal
+    %     referenceEndpoint = referenceEndpoint-1;
+    % end
 
 
     %Get G conductance vector (and diag matrix)
     %We've the Z vector already at our disposal so it's easy
-    sortedEdges = sort(edges+1);
-    G_vector = 1./Z(sortedEdges);
+    % sortedEdges = sort(edges+1);
+    % 
+    % 
+    % G_vector = 1./Z(sortedEdges);
+    G_vector = 1./Z(componentGraph.Edges.Id);
     G_m = diag(G_vector);
 
 
@@ -177,6 +183,7 @@ elseif type ==2 %RIGID
     Y = A*G_m*A'; %Admittance matrix
     Imp = inv(Y); %Impedances matrix
     %Adaptation
+
     Z(element_mIndex)=Imp(referenceEndpoint, referenceEndpoint);
 
 
