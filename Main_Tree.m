@@ -112,7 +112,21 @@ end
 numSamples = numel(Vin);
 VOut = zeros(numOutputs, numSamples);
 maxDepth = Tree(end).depth;
+
+
+%Precompute real and virtual edges for each component
+for i=1:numComps
+    component = Tree(i);
+    edges = component.edges;
+    edges = edges(edges~=component.parentEdge);
+    indexes = edges<numEdges;
+    Tree(i).realEdges = edges(indexes); %Real edges, no parent
+    Tree(i).virtualEdges = edges(~indexes); %Virtual edges, no parent
+    Tree(i).nonParentEdges = [Tree(i).realEdges, Tree(i).virtualEdges];
+end
+
 tic
+
 for n=1:numSamples
     %Forward scan
     for i=numComps:-1:1
@@ -122,9 +136,9 @@ for n=1:numSamples
         %(manage linear elements)
         %The second check (with parentEdge) is only needed for the
         %particular case where edge correspond to a non-adaptable element
-        realEdges = edges(edges<numEdges & edges~=component.parentEdge);
-        for j=1:numel(realEdges)
-           edge = realEdges(j);
+        %realEdges = edges(edges<numEdges & edges~=component.parentEdge);
+        for j=1:numel(component.realEdges)
+           edge = component.realEdges(j);
            a(edge+1) = funcs{edge+1}(b(edge+1), Vin, n);
         end
         %Compute junction reflected waves
@@ -135,15 +149,12 @@ for n=1:numSamples
         %(Easier to take also the values we don't need, anyway if the
         %scattering matrix was built correctly it will be ignored)
         in = a(edges+1);
-
-        b(edge+1)=component.scatteringUp(1:numel(in))*in(:);
-        a(edge+1)=b(edge+1); %should be avoided for the root, but it should do no damage anyway
-
+        a(edge+1)=component.scatteringUp(1:numel(in))*in(:);
 
     end
 
     %Root scattering
-    b(edge+1)=funcs{edge+1}(b(edge+1), Vin, n);
+    b(edge+1)=funcs{edge+1}(a(edge+1), Vin, n);
     a(edge+1)=b(edge+1);
 
 
@@ -153,11 +164,8 @@ for n=1:numSamples
         component = Tree(i);
         edges = component.edges;
         in = a(edges+1);
-        indexes = edges~=component.parentEdge;
-        edges = edges(indexes);
-        b(edges+1)=S(edges+1, 1:numel(in))*in(:);
-        virtualEdges = edges(edges>=numEdges);
-        a(virtualEdges+1) = b(virtualEdges+1);
+        b(component.nonParentEdges+1)=S(component.nonParentEdges+1, 1:numel(in))*in(:);
+        a(component.virtualEdges+1) = b(component.virtualEdges+1);
     end
 
     %Read output
