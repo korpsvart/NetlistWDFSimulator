@@ -8,7 +8,7 @@ p = size(B, 1);
 previousParsingLoaded = false;
 updated = false;
 
-if (isfile(parsingResult))
+if (false)
     %Load parsing result if available
     load(parsingResult, 'Z', 'S', 'Fs');
     
@@ -30,7 +30,7 @@ end
 
 
 %% Computing Scattering Matrix
-if (~previousParsingLoaded || updated)
+if (~previousParsingLoaded || true)
     
     adaptableEdgesIndexes = orderedEdges(:, 2)~=refEdgeId;
     Z = getZ(orderedEdges, Fs_signal);
@@ -104,7 +104,7 @@ if (~previousParsingLoaded || updated)
     end
     
     Fs = Fs_signal;
-    save(parsingResult,'S','Z', 'Fs');
+    % save(parsingResult,'S','Z', 'Fs');
 end
 
 

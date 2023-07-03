@@ -22,7 +22,7 @@ G = graph(EdgeTable);
 
 recompute = true;
 
-if (isfile(parsingResult))
+if (false)
     %Load parsing result if available
     previousData = load(parsingResult, 'B', 'Q', 'G');
 
@@ -47,14 +47,14 @@ if (isfile(parsingResult))
     end
 end
 
-if recompute
+if true %recompute
    
     % Computing the incidence Matrix A
     A = full(incidence(G));
     dimA = size(A);
     m = dimA(1); %number of nodes
     n = dimA(2); %number of edges (elements)
-    plot(G,'EdgeLabel', G.Edges.Id);
+    %plot(G,'EdgeLabel', G.Edges.Id);
 
     % Computing At and Ac 
     tree = minspantree(G);
@@ -83,7 +83,7 @@ if recompute
 
 
     orderedEdges = [cotree.Edges.Variables; tree.Edges.Variables];
-    save(parsingResult,'B', 'Q','G');
+    % save(parsingResult,'B', 'Q','G');
     
 end
 

@@ -2,8 +2,8 @@ close all
 clearvars 
 clc
 addpath utils
+addpath utils_profiling\
 
-tic
 
 %% Variables to adjust depending on the netlist
 
@@ -16,94 +16,28 @@ outputPorts = ["R2"];
 referenceSignalFilenames = ["data/audio/bridget_vr2p.wav"];
 numOutputs = numel(outputPorts);
 
-
-%% Parse topology
-parsingResult = strcat(netlistFilename, '.mat');
-
-[B,Q,G,orderedEdges] = parseTopology(netlistFilename);
-
 %% Import Input Audio Signal
 [Vin,Fs] = audioread('data/audio/ExpSweep.wav');
 Ts=1/Fs;
 
-[Z, S] = getZS(netlistFilename,B,Q,orderedEdges,Fs, G,refEdgeId);
-
-
-toc
-
-
-
-%% Loop a,b,I/O declaration and initialization
-
-n = size(orderedEdges, 1);
-
-Nsamp=length(Vin);
-dimS = size(S);
-
-ii=1;
-
-a   = zeros(dimS(2), 1);
-b   = zeros(dimS(1), 1);
-
-%Outputs
-
-V = zeros(n, Nsamp);
-I = zeros(n, Nsamp);
-
-%% Real-time filtering using WDF
-
-Z_diag = diag(Z, 0);
-
-types = orderedEdges(:, 1);
-
-funcs = cell(n,1);
-for i=1:n
-switch types(i)
-    case 'R'    
-        funcs{i} = @(b, Vin, ii) 0;
-    case 'C'    
-        funcs{i} = @(b, Vin, ii) b;
-    case 'L'
-        funcs{i} = @(b, Vin, ii) -b;
-    case 'Vreal'
-        funcs{i} = @(b, Vin, ii) Vin(ii); %small series resistance value
-    case 'Ireal'
-        funcs{i} = @(b, Vin, ii) 10e9*Vin(ii); % large resistance value
-    case 'V'
-        funcs{i} = @(b, Vin, ii) 2*Vin(ii)-b; % ideal voltage source
-end
-end
-
 tic
+
+%% Build WDF Structure
+
+[orderedEdges, Z, S] = all_parsing(netlistFilename, Fs, refEdgeId);
+
+
+
+%% Simulate
+
+
 ids = orderedEdges(:, 2);
 refEdgeIndex = find(ids==refEdgeId);
-k=1:n;
-k=k(k~=refEdgeIndex);
-while (ii<Nsamp)
 
-    %forward scan
+[V, I] = simulate(orderedEdges, Z, S, refEdgeIndex, Vin);
 
-    for i=k
-        a(i) = funcs{i}(b(i), Vin, ii);
-    end
-   
-
-    b = S*a; %reflecting from the junction
-
-    %local scattering
-    a(refEdgeIndex) = funcs{refEdgeIndex}(b(refEdgeIndex), Vin, ii);
-
-    %backward scan
-    b = S*a;
-    
-    %compute output voltages and currents
-    
-    V(:, ii) = (a+b)/2;
-    I(:, ii) = (a-b)./(2*Z_diag);
-    
-    ii = ii+1;  
-end
 toc
+
 
 %% Plotting the results
 
@@ -117,10 +51,12 @@ else
     legends = ["WDF"];
 end
 
+Nsamp = length(Vin);
 VOut=zeros(numOutputs, Nsamp);
 for i=1:numOutputs
     VOut(i, :) = V(ids==outputPorts(i), :);
 end
+
 
 tWdf = 1/Fs*[1:Nsamp];
 figure
@@ -137,6 +73,10 @@ for i=1:numOutputs
     legend(legends, "Fontsize",16,"interpreter","latex");
     title('Output Signals','Fontsize',18,'interpreter','latex');
 end
+
+
+%%Compute RMSE
+rmse(VOut(1, :), referenceSignal(1, :))
 
 
 
