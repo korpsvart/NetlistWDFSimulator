@@ -23,23 +23,7 @@ Z_diag = diag(Z, 0);
 
 types = orderedEdges(:, 1);
 
-funcs = cell(n,1);
-for i=1:n
-switch types(i)
-    case 'R'    
-        funcs{i} = @(b, Vin, ii) 0;
-    case 'C'    
-        funcs{i} = @(b, Vin, ii) b;
-    case 'L'
-        funcs{i} = @(b, Vin, ii) -b;
-    case 'Vreal'
-        funcs{i} = @(b, Vin, ii) Vin(ii); %small series resistance value
-    case 'Ireal'
-        funcs{i} = @(b, Vin, ii) 10e9*Vin(ii); % large resistance value
-    case 'V'
-        funcs{i} = @(b, Vin, ii) 2*Vin(ii)-b; % ideal voltage source
-end
-end
+funcs = getElementsFunctions(types);
 
 k=1:n;
 k=k(k~=refEdgeIndex);

@@ -2,7 +2,7 @@ function [VOut] = simulateWDFTree(Tree, E, Z, S, Vin, numOutputs, numComps, outp
 %% Simulation phase
 
 %sort by increasing depth
-[B,I] = sort([Tree.depth]);
+[~,I] = sort([Tree.depth]);
 Tree = Tree(I);
 
 %Allocate incident and reflected waves vectors
@@ -16,30 +16,10 @@ a = zeros(M, 1);
 types = [E.Type]';
 numEdges = size(E, 1);
 
-funcs = cell(numEdges,1);
-for i=1:numEdges
-switch types(i)
-    case 'R'    
-        funcs{i} = @(b, Vin, ii) 0;
-    case 'C'    
-        funcs{i} = @(b, Vin, ii) b;
-    case 'L'
-        funcs{i} = @(b, Vin, ii) -b;
-    case 'Vreal'
-        funcs{i} = @(b, Vin, ii) Vin(ii); %small series resistance value
-    case 'Ireal'
-        funcs{i} = @(b, Vin, ii) 10e9*Vin(ii); % large resistance value
-    case 'V'
-        funcs{i} = @(b, Vin, ii) 2*Vin(ii)-b; % ideal voltage source
-end
-end
-
-
-
+funcs = getElementsFunctions(types);
 
 numSamples = numel(Vin);
 VOut = zeros(numOutputs, numSamples);
-maxDepth = Tree(end).depth;
 
 
 %Precompute real and virtual edges for each component
