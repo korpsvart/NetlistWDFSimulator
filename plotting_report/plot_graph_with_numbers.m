@@ -1,0 +1,9 @@
+EdgeTable = table(endNodes, types, ids, values,(0:numel(values)-1)', ...
+'VariableNames',{'EndNodes', 'Type', 'Id', 'Value', 'NumericId'});
+G = graph(EdgeTable);
+
+props = plot(G, "EdgeLabel", G.Edges.Id+ ' (index:' +G.Edges.NumericId + ')', 'EdgeFontSize', 20, ...
+    'NodeFontSize', 18, 'Interpreter', 'latex', 'EdgeLabelColor', 'b', ...
+    'NodeLabelColor', 'b', 'NodeColor', 'red' , 'EdgeColor', 'k', 'LineWidth', 1.3);
+props.XData(5) = props.XData(5)+0.9;
+

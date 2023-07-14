@@ -40,7 +40,7 @@ Z = zeros(M, 1);
 L = max(arrayfun(@(x) numel(x.edges),T));
 S = zeros(M, L);
 
-[Tree,Z, S] = handleComponent(T, N, numEdges, rootCompIndex, refEdgeIndex, E, Z, Fs, 1, endpoints, S);
+[Tree,Z, S] = handleComponent(T, numEdges, rootCompIndex, refEdgeIndex, E, Z, Fs, 1, endpoints, S);
 
 
 

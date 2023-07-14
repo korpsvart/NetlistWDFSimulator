@@ -1,31 +1,34 @@
-function [T, Z, overallS] = handleComponent(T, N, numEdges, compIndex, lastVirtualEdge, E, Z, Fs, depth, endpoints, overallS)
+function [T, Z, overallS] = handleComponent(T, numEdges, compIndex, lastParentEdge, E, Z, Fs, depth, endpoints, overallS)
 
-%lastVirtualEdge is the virtual edge from which we came to this
+%lastParentEdge is the virtual edge from which we came to this
 %component (for the root it's the reference edge, so in theory the
 %non-linear element)
 
 T(compIndex).depth = depth;
-T(compIndex).parentEdge = lastVirtualEdge;
+T(compIndex).parentEdge = lastParentEdge;
 
 %%Exploration phase
 numCompEdges=numel(T(compIndex).edges);
 for i=1:numCompEdges
     
-    if T(compIndex).edges(i)==lastVirtualEdge
+    if T(compIndex).edges(i)==lastParentEdge
         continue;
     end
 
     if T(compIndex).edges(i) >= numEdges %it means the edge is virtual
         %Find the other component with the same virtual edge
         found=false;
-        for j=1:N
+        for j=1:numel(T)
             if isempty(T(j).parentEdge) %to skip already explored nodes
+                %(The check above is probably superfluous, since I don't
+                %think there is any way to explore an already seen
+                %component, if we already skip the parent)
                 if any(T(j).edges == T(compIndex).edges(i))
                     %They share the same virtual edge =>
                     %link the components in the tree
                     found = true;
                     %Recursive call
-                    [T, Z, overallS] = handleComponent(T, N, numEdges, j, T(compIndex).edges(i), E, Z, Fs, depth+1, endpoints, overallS);
+                    [T, Z, overallS] = handleComponent(T, numEdges, j, T(compIndex).edges(i), E, Z, Fs, depth+1, endpoints, overallS);
                     break;
                 end
             end
@@ -46,7 +49,7 @@ end
 %Adapt the real edges
 for i=1:numCompEdges
     %Check if edge is real and if it's not the root non-adaptable element
-    if T(compIndex).edges(i) < numEdges && T(compIndex).edges(i)~=lastVirtualEdge
+    if T(compIndex).edges(i) < numEdges && T(compIndex).edges(i)~=lastParentEdge
         %Get corresponding MATLAB index for the edge
         element_mIndex = T(compIndex).edges(i)+1;
         element = E(element_mIndex);
@@ -55,11 +58,11 @@ for i=1:numCompEdges
 
 end
 
-%Adapt the virtual edge "going up" (lastVirtualEdge)
+%Adapt the virtual edge "going up" (lastParentEdge)
 %or the edge corresponding to the non-linear element
-%(it's still lastVirtualEdge if everything was called correctly at the
+%(it's still lastParentEdge if everything was called correctly at the
 %root)
-element_mIndex = lastVirtualEdge+1;
+element_mIndex = lastParentEdge+1;
 %Depending on the junction type (0=PARALLEL, 1=SERIES, 2=RIGID)
 
 
@@ -68,7 +71,7 @@ type = T(compIndex).type;
 if type == 0 %PARALLEL
     adaptValue=0;
     for i=1:numCompEdges
-        if T(compIndex).edges(i) ~= lastVirtualEdge %get all the others
+        if T(compIndex).edges(i) ~= lastParentEdge %get all the others
             element_mIndex2 = T(compIndex).edges(i)+1;
             adaptValue=adaptValue+(1/Z(element_mIndex2));
         end
@@ -91,7 +94,7 @@ if type == 0 %PARALLEL
 elseif type == 1 %SERIES
     adaptValue=0;
     for i=1:numCompEdges
-        if T(compIndex).edges(i) ~= lastVirtualEdge %get all the others
+        if T(compIndex).edges(i) ~= lastParentEdge %get all the others
             element_mIndex2 = T(compIndex).edges(i)+1;
             adaptValue=adaptValue+Z(element_mIndex2);
         end
@@ -117,7 +120,7 @@ elseif type ==2 %RIGID
 
     edges = T(compIndex).edges;
     parentEdgeEndpoints = endpoints(element_mIndex, :)+1;
-    edges = edges(edges ~= lastVirtualEdge); %remove parentedge
+    edges = edges(edges ~= lastParentEdge); %remove parentedge
 
 
     %Create graph object
@@ -136,16 +139,19 @@ elseif type ==2 %RIGID
 
 
     %Remove one of the endpoints of the virtual edge
-    endpointToRemove = find(allNodes == parentEdgeEndpoints(1));
-    referenceEndpoint =find(allNodes == parentEdgeEndpoints(2));
+    i1 = find(allNodes == parentEdgeEndpoints(1));
+    i2 = find(allNodes == parentEdgeEndpoints(2));
     %endpointToRemove = nodesI(parentEdgeEndpoints(1)); %Take the first endpoint, for example
     %referenceEndpoint =nodesI(parentEdgeEndpoints(2)); %Other become reference
 
+    endpointToRemove = max([i1, i2]);
+    referenceEndpoint = min([i1, i2]);
 
 
 
     %Get adjacency matrix
     A = full(incidence(componentGraph));
+    A = A(nodesI, :);
 
 
     %We can't use the rmnode function because it will also delete incident
@@ -157,15 +163,18 @@ elseif type ==2 %RIGID
 
 
 
-    if (referenceEndpoint>endpointToRemove) %shift for removal
-        referenceEndpoint = referenceEndpoint-1;
-    end
+    % if (referenceEndpoint>endpointToRemove) %shift for removal
+    %     referenceEndpoint = referenceEndpoint-1;
+    % end
 
 
     %Get G conductance vector (and diag matrix)
     %We've the Z vector already at our disposal so it's easy
-    sortedEdges = sort(edges+1);
-    G_vector = 1./Z(sortedEdges);
+    % sortedEdges = sort(edges+1);
+    % 
+    % 
+    % G_vector = 1./Z(sortedEdges);
+    G_vector = 1./Z(componentGraph.Edges.Id);
     G_m = diag(G_vector);
 
 
@@ -174,6 +183,7 @@ elseif type ==2 %RIGID
     Y = A*G_m*A'; %Admittance matrix
     Imp = inv(Y); %Impedances matrix
     %Adaptation
+
     Z(element_mIndex)=Imp(referenceEndpoint, referenceEndpoint);
 
 
@@ -183,7 +193,7 @@ elseif type ==2 %RIGID
 
     %Add the virtual edge to the previous graph, since now we need
     %the complete version
-    edgetable = table(string(parentEdgeEndpoints), lastVirtualEdge+1, 'VariableNames',{'EndNodes', 'Id'});
+    edgetable = table(string(parentEdgeEndpoints), lastParentEdge+1, 'VariableNames',{'EndNodes', 'Id'});
     componentGraph = addedge(componentGraph, edgetable);
 
     tree = minspantree(componentGraph);

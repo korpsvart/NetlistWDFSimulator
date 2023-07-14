@@ -9,11 +9,15 @@ addpath triconnectedDecomp\
 netlistFilename = 'BridgeTSP';
 %refEdgeIndex is the index of the edge corresponding to non-adaptable element
 %(Starting from 1 in the netlist)
-refEdgeIndex = 6;
+refEdgeId = "Vin";
 %Specify the indexes of the ports you want to compute the output for
 %(Starting from 1 in the netlist)
-outputPorts = [4, 7];
-numOutputs = numel(outputPorts);
+outputPortsIds = ["R2"];
+%Specify the reference signals filenames for results validation, if you
+%have any (for example output from LTSpice). Leave empty if not used
+referenceSignalFilenames = ["data/audio/bridget_vr2p.wav"];
+numOutputs = numel(outputPortsIds);
+
 
 
 
@@ -36,6 +40,13 @@ values = M(:, 4);
 EdgeTable = table(endNodes, types, ids, values,...
 'VariableNames',{'EndNodes', 'Type', 'Id', 'Value'});
 G = graph(EdgeTable);
+
+refEdgeIndex = find(EdgeTable.Id==refEdgeId);
+outputPorts = zeros(1, numOutputs);
+for i=1:numOutputs
+    outputPorts(i) = find(EdgeTable.Id==outputPortsIds(i));
+end
+
 
 %% Triconnected components decomposition
 
@@ -101,7 +112,21 @@ end
 numSamples = numel(Vin);
 VOut = zeros(numOutputs, numSamples);
 maxDepth = Tree(end).depth;
+
+
+%Precompute real and virtual edges for each component
+for i=1:numComps
+    component = Tree(i);
+    edges = component.edges;
+    edges = edges(edges~=component.parentEdge);
+    indexes = edges<numEdges;
+    Tree(i).realEdges = edges(indexes); %Real edges, no parent
+    Tree(i).virtualEdges = edges(~indexes); %Virtual edges, no parent
+    Tree(i).nonParentEdges = [Tree(i).realEdges, Tree(i).virtualEdges];
+end
+
 tic
+
 for n=1:numSamples
     %Forward scan
     for i=numComps:-1:1
@@ -111,9 +136,9 @@ for n=1:numSamples
         %(manage linear elements)
         %The second check (with parentEdge) is only needed for the
         %particular case where edge correspond to a non-adaptable element
-        realEdges = edges(edges<numEdges & edges~=component.parentEdge);
-        for j=1:numel(realEdges)
-           edge = realEdges(j);
+        %realEdges = edges(edges<numEdges & edges~=component.parentEdge);
+        for j=1:numel(component.realEdges)
+           edge = component.realEdges(j);
            a(edge+1) = funcs{edge+1}(b(edge+1), Vin, n);
         end
         %Compute junction reflected waves
@@ -124,15 +149,12 @@ for n=1:numSamples
         %(Easier to take also the values we don't need, anyway if the
         %scattering matrix was built correctly it will be ignored)
         in = a(edges+1);
-
-        b(edge+1)=component.scatteringUp(1:numel(in))*in(:);
-        a(edge+1)=b(edge+1); %should be avoided for the root, but it should do no damage anyway
-
+        a(edge+1)=component.scatteringUp(1:numel(in))*in(:);
 
     end
 
     %Root scattering
-    b(edge+1)=funcs{edge+1}(b(edge+1), Vin, n);
+    b(edge+1)=funcs{edge+1}(a(edge+1), Vin, n);
     a(edge+1)=b(edge+1);
 
 
@@ -142,11 +164,8 @@ for n=1:numSamples
         component = Tree(i);
         edges = component.edges;
         in = a(edges+1);
-        indexes = edges~=component.parentEdge;
-        edges = edges(indexes);
-        b(edges+1)=S(edges+1, 1:numel(in))*in(:);
-        virtualEdges = edges(edges>=numEdges);
-        a(virtualEdges+1) = b(virtualEdges+1);
+        b(component.nonParentEdges+1)=S(component.nonParentEdges+1, 1:numel(in))*in(:);
+        a(component.virtualEdges+1) = b(component.virtualEdges+1);
     end
 
     %Read output
@@ -156,22 +175,35 @@ toc
 
 %% Plotting the results
 
-spiceOutLow = audioread('data/audio/bridget_vr2p.wav');
 
-tSpice = 1/Fs*[1:length(spiceOutLow)];
+if (~isempty(referenceSignalFilenames))
+    for k=1:numel(referenceSignalFilenames)
+        referenceSignal(k, :) = audioread(referenceSignalFilenames(k));
+    end
+    tReference = 1/Fs*[1:size(referenceSignal, 2)];
+    legends = ["Reference","WDF"];
+else
+    legends = ["WDF"];
+end
+
+
 tWdf = 1/Fs*[1:numSamples];
 figure
 set(gcf, 'Color', 'w');
 for i=1:numOutputs
     subplot(numOutputs, 1, i)
-    plot(tSpice,spiceOutLow,'r','Linewidth',2); hold on;
-    plot(tWdf, VOut(i, :),'b--','Linewidth',1); grid on;  
-    xlabel('time [seconds]','Fontsize',16,'interpreter','latex');
-    ylabel('$V_{\mathrm{outLow}}$ [V]','Fontsize',16,'interpreter','latex');
-    xlim([0 tSpice(end)]);
-    legend('LTspice','WDF','Fontsize',16,'interpreter','latex');
-    title('Output Signals','Fontsize',18,'interpreter','latex');
+    if (~isempty(referenceSignalFilenames))
+        plot(tReference,referenceSignal(i, :),'r','Linewidth',2); hold on;
+    end
+    plot(tWdf, VOut(i, :),'b--','Linewidth',1); grid on;
+    xlabel('time [seconds]','Fontsize',22,'interpreter','latex');
+    ylabel('$V_{\mathrm{OutR_2}}$ [V]','Fontsize',22,'interpreter','latex');
+    xlim([0 tWdf(end)]);
+    legend(legends, "Fontsize",22,"interpreter","latex");
+    title('Output Signals','Fontsize',24,'interpreter','latex');
 end
+
+
 
 
 
