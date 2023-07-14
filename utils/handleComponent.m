@@ -149,27 +149,10 @@ elseif type ==2 %RIGID
 
     [B, Q, orderedEdges] = getBQ(componentGraph);
 
-    n = numCompEdges;
-    q = size(Q, 1);
-    p = size(B, 1);
-
     Z_values = Z(orderedEdges);
     Z_m = diag(Z_values);
 
-    if (q <= p)
-       Z_inv = inv(Z_m);
-       S = 2*Q'*inv(Q*Z_inv*Q')*Q*Z_inv - eye(n);
-
-       %According to MATLAb it's faster and more accurate like this
-       %But also much less readable
-       %S = 2*Q'*(Q*(Z\Q')\Q)/Z - eye(n);
-     else
-       S = eye(n) - 2*Z_m*B'*inv(B*Z_m*B')*B;
-
-       %Same as above
-       %S = eye(n) - 2*Z*B'*((B*Z*B')\B);
-
-    end
+    S = getScatteringMatrix(B, Q, Z_m);
 
     positions = zeros(numCompEdges, 1);
     for h=1:numCompEdges

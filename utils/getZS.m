@@ -2,9 +2,6 @@ function [Z, S] = getZS(netlistFilename,B,Q, orderedEdges, Fs_signal, G, refEdge
 
 parsingResult = strcat(netlistFilename, '_Z_S.mat');
 
-n = size(orderedEdges, 1);
-q = size(Q, 1);
-p = size(B, 1);
 previousParsingLoaded = false;
 updated = false;
 
@@ -59,7 +56,7 @@ if (~previousParsingLoaded || updated)
     end
 
     
-    thevImp = adaptRJunction(Gprime, Z_reordered, refEdgeEndpoints, graphNodesOrder);
+    [thevImp] = adaptRJunction(Gprime, Z_reordered, refEdgeEndpoints, graphNodesOrder);
 
     Z_diag(~adaptableEdgesIndexes)=thevImp;
     Z = diag(Z_diag);
@@ -67,21 +64,8 @@ if (~previousParsingLoaded || updated)
 
     %%%%%%%%%%%%%%%%%%%
 
+    S = getScatteringMatrix(B, Q, Z);
     
-    if (q <= p)
-       Z_inv = inv(Z);
-       S = 2*Q'*inv(Q*Z_inv*Q')*Q*Z_inv - eye(n);
-
-       %According to MATLAb it's faster and more accurate like this
-       %But also much less readable
-       %S = 2*Q'*(Q*(Z\Q')\Q)/Z - eye(n);
-     else
-       S = eye(n) - 2*Z*B'*inv(B*Z*B')*B;
-
-       %Same as above
-       %S = eye(n) - 2*Z*B'*((B*Z*B')\B);
-
-    end
     
     Fs = Fs_signal;
     save(parsingResult,'S','Z', 'Fs');
