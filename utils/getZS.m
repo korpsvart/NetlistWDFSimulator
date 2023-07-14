@@ -52,30 +52,16 @@ if (~previousParsingLoaded || updated)
 
     graphNodesOrder = convertCharsToStrings(Gprime.Nodes.Variables);
 
-    i1 = find(graphNodesOrder == refEdgeEndpoints(1));
-    i2 =find(graphNodesOrder == refEdgeEndpoints(2));
-
-    endpointToRemove = max([i1, i2]);
-    referenceEndpoint = min([i1, i2]);
-
-    A = full(incidence(Gprime));
-    A(endpointToRemove, :) = [];
-
-
     %Reorder Z_adapted according to graph edges ordering
     Z_reordered = zeros(size(Z_adapted, 1), 1);
     for h=1:size(Z_adapted, 1)
         Z_reordered(h)= Z_adapted(Gprime.Edges.Id(h)==adaptableEdgesIds);
     end
 
-    G_vector = 1./Z_reordered;
-    G_m = diag(G_vector);
+    
+    thevImp = adaptRJunction(Gprime, Z_reordered, refEdgeEndpoints, graphNodesOrder);
 
-    %Compute Y
-    Y = A*G_m*A'; %Admittance matrix
-    Imp = inv(Y); %Impedances matrix
-    %Adaptation
-    Z_diag(~adaptableEdgesIndexes)=Imp(referenceEndpoint, referenceEndpoint);
+    Z_diag(~adaptableEdgesIndexes)=thevImp;
     Z = diag(Z_diag);
 
 
