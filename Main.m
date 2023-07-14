@@ -9,11 +9,11 @@ addpath utils
 netlistFilename = 'BridgeTSP';
 refEdgeId = "Vin"; %id of the edge corresponding to non-adaptable element
 %Specify the names of the ports to compute the output
-outputPorts = ["R2"];
+outputPortsIds = ["R2"];
 %Specify the reference signals filenames for results validation, if you
 %have any (for example output from LTSpice). Leave empty if not used
 referenceSignalFilenames = ["data/audio/bridget_vr2p.wav"];
-numOutputs = numel(outputPorts);
+numOutputs = numel(outputPortsIds);
 
 %% Import Input Audio Signal
 [Vin,Fs] = audioread('data/audio/ExpSweep.wav');
@@ -37,7 +37,7 @@ refEdgeIndex = find(ids==refEdgeId);
 Nsamp = length(Vin);
 VOut=zeros(numOutputs, Nsamp);
 for i=1:numOutputs
-    VOut(i, :) = V(ids==outputPorts(i), :);
+    VOut(i, :) = V(ids==outputPortsIds(i), :);
 end
 
 plotResults(VOut, referenceSignalFilenames, Fs);

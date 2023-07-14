@@ -180,35 +180,12 @@ elseif type ==2 %RIGID
     edgetable = table(string(parentEdgeEndpoints), lastParentEdge+1, 'VariableNames',{'EndNodes', 'Id'});
     componentGraph = addedge(componentGraph, edgetable);
 
-    tree = minspantree(componentGraph);
-    At = full(incidence(tree));
-    q = size(At, 2); % q is the number of independent voltages
-
-    %Extract cotree
-
-    %Find edges in the original graph which are part of cotree
-    idx = ismember(componentGraph.Edges.Id, tree.Edges.Id);
-
-    %Convert logical array into sequential indexes
-    idx_n = find(idx);
-
-    %remove edges from original
-    cotree = rmedge(componentGraph, idx_n);
-    Ac = full(incidence(cotree));
-    p = size(Ac, 2); % p is the number of independent currents
-
-    % Computing F
-    F = pinv(At)*Ac; %F has size q x p 
-
-    % Computing B and Q
-    B = [eye(p) -F'];
-    Q = [F eye(q)];
+    [B, Q, orderedEdges] = getBQ(componentGraph);
 
     n = numCompEdges;
     q = size(Q, 1);
     p = size(B, 1);
 
-    orderedEdges = [cotree.Edges.Variables; tree.Edges.Variables];
     Z_values = Z(orderedEdges);
     Z_m = diag(Z_values);
 
