@@ -16,15 +16,9 @@ A MATLAB (R2023a) implementation of a WDF based circuit simulator which can pars
     * ```Main_Tree.m```
 
     The two versions are described in detail in the following sections.
-- The ```utils``` folder contains some MATLAB utility functions, related to the parsing of the topology or the creation of the WDF structure.
+- The ```utils``` folder contains some MATLAB utility functions, related to the parsing of the topology or the creation/simulation of the WDF structure.
 - The ```TriconnectedDecomp``` folder contains the code implementing the triconnected decomposition algorithm.
 - The ```data``` folder contains some samples netlist files and input/output signals which can be used to test and evaluate the code performance.
-
-
-
-
-
-
 
 
 
@@ -73,7 +67,7 @@ This version works similarly to the previous one, but the reference circuit is f
 ## "Main" Utility functions (utils)
 
 
-### ```parseTopology```
+### ```getTopology```
 
 - Inputs: 
     - netlistFilename: the netlist filename
@@ -103,7 +97,7 @@ The result of this function depends only on the topological properties of the ne
     - S: the scattering matrix for a single junction WDF structure
 
 
-Similarly to ```parseTopology```, it will attempt re-using previously computed Z and S (this is only possible if the network is isomorphic and both the circuital values and the sampling frequency have not been changed).
+Similarly to ```getTopology```, it will attempt re-using previously computed Z and S (this is only possible if the network is isomorphic and both the circuital values and the sampling frequency have not been changed).
 
 
 

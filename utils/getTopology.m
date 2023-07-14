@@ -1,4 +1,4 @@
-function [B,Q,G, orderedEdges] = parseTopology(netlistFilename)
+function [B,Q,G, orderedEdges] = getTopology(netlistFilename)
 
 parsingResult = strcat(netlistFilename, '_topology.mat');
 
