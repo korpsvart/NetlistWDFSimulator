@@ -1,4 +1,4 @@
-function [V,I] = simulate(orderedEdges, Z, S, refEdgeIndex, Vin)
+function [V,I] = simulateWDF(orderedEdges, Z, S, refEdgeIndex, Vin)
 
 %% Loop a,b,I/O declaration and initialization
 

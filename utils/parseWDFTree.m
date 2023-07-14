@@ -1,6 +1,4 @@
-function [Tree,E, Z, S, numComps, outputPorts] = all_parsing_tree(netlistFilename, refEdgeId, numOutputs, outputPortsIds, Fs)
-
-
+function [Tree,E, Z, S, numComps, outputPorts] = parseWDFTree(netlistFilename, refEdgeId, numOutputs, outputPortsIds, Fs)
 
 
 %% Parsing netlist and building graph G
@@ -8,20 +6,8 @@ function [Tree,E, Z, S, numComps, outputPorts] = all_parsing_tree(netlistFilenam
 
 % Parsing from LTSpice netlist
 
-%CommentStyle option to ignore SPICE directives
-%Range = 2 to ignore first line (specifies Netlist path)
 
-M = readmatrix(strcat('data/netlist/', netlistFilename , '.txt'), 'OutputType', 'string',...
-    'CommentStyle', {'.'}, 'Range', 2);
-
-% Creating circuit graph
-endNodes = M(:, 2:3);
-types = extractBetween(M(:, 1), 1, 1);
-ids = M(:, 1);
-values = M(:, 4);
-EdgeTable = table(endNodes, types, ids, values,...
-'VariableNames',{'EndNodes', 'Type', 'Id', 'Value'});
-G = graph(EdgeTable);
+[G, EdgeTable] = graphFromNetlist(strcat('data/netlist/', netlistFilename , '.txt'));
 
 refEdgeIndex = find(EdgeTable.Id==refEdgeId);
 outputPorts = zeros(1, numOutputs);

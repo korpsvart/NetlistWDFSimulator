@@ -8,7 +8,7 @@ p = size(B, 1);
 previousParsingLoaded = false;
 updated = false;
 
-if (false)
+if (isfile(parsingResult))
     %Load parsing result if available
     load(parsingResult, 'Z', 'S', 'Fs');
     
@@ -30,7 +30,7 @@ end
 
 
 %% Computing Scattering Matrix
-if (~previousParsingLoaded || true)
+if (~previousParsingLoaded || updated)
     
     adaptableEdgesIndexes = orderedEdges(:, 2)~=refEdgeId;
     Z = getZ(orderedEdges, Fs_signal);
@@ -46,13 +46,9 @@ if (~previousParsingLoaded || true)
     endpoints = G.Edges.EndNodes;
     refEdgeIndex = find(G.Edges.Id == refEdgeId);
     refEdgeEndpoints = convertCharsToStrings(endpoints(refEdgeIndex, :));
-    % allNodes = unique(endpoints); %all nodes list
-    % [allNodes, nodesI] = sort(allNodes);
-    % allNodes = convertCharsToStrings(allNodes);
 
     Gprime = rmedge(G, refEdgeIndex);
-    % [~, order] = sort(Gprime.Nodes.Variables);
-    % Gprime = reordernodes(Gprime, order);
+
 
     graphNodesOrder = convertCharsToStrings(Gprime.Nodes.Variables);
 
@@ -65,9 +61,6 @@ if (~previousParsingLoaded || true)
     A = full(incidence(Gprime));
     A(endpointToRemove, :) = [];
 
-    % if (referenceEndpoint>endpointToRemove) %shift for removal
-    %     referenceEndpoint = referenceEndpoint-1;
-    % end
 
     %Reorder Z_adapted according to graph edges ordering
     Z_reordered = zeros(size(Z_adapted, 1), 1);
@@ -94,6 +87,7 @@ if (~previousParsingLoaded || true)
        S = 2*Q'*inv(Q*Z_inv*Q')*Q*Z_inv - eye(n);
 
        %According to MATLAb it's faster and more accurate like this
+       %But also much less readable
        %S = 2*Q'*(Q*(Z\Q')\Q)/Z - eye(n);
      else
        S = eye(n) - 2*Z*B'*inv(B*Z*B')*B;
@@ -104,13 +98,9 @@ if (~previousParsingLoaded || true)
     end
     
     Fs = Fs_signal;
-    % save(parsingResult,'S','Z', 'Fs');
+    save(parsingResult,'S','Z', 'Fs');
 end
 
-
-    
-    
-    
     
 end
     

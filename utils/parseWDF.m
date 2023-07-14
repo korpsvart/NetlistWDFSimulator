@@ -1,4 +1,4 @@
-function [orderedEdges, Z, S] = all_parsing(netlistFilename, Fs, refEdgeId)
+function [orderedEdges, Z, S] = parseWDF(netlistFilename, Fs, refEdgeId)
 
 [B,Q,G,orderedEdges] = parseTopology(netlistFilename);
 

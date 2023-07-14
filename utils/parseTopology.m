@@ -5,24 +5,12 @@ parsingResult = strcat(netlistFilename, '_topology.mat');
 
 % Parsing from LTSpice netlist
 
-%CommentStyle option to ignore SPICE directives
-%Range = 2 to ignore first line (specifies Netlist path)
+[G, ~] = graphFromNetlist(strcat('data/netlist/', netlistFilename , '.txt'));
 
-M = readmatrix(strcat('data/netlist/', netlistFilename , '.txt'), 'OutputType', 'string',...
-    'CommentStyle', {'.'}, 'Range', 2);
-
-% Creating circuit graph
-endNodes = M(:, 2:3);
-types = extractBetween(M(:, 1), 1, 1);
-ids = M(:, 1);
-values = M(:, 4);
-EdgeTable = table(endNodes, types, ids, values,...
-'VariableNames',{'EndNodes', 'Type', 'Id', 'Value'});
-G = graph(EdgeTable);
 
 recompute = true;
 
-if (false)
+if (isfile(parsingResult))
     %Load parsing result if available
     previousData = load(parsingResult, 'B', 'Q', 'G');
 
@@ -47,15 +35,8 @@ if (false)
     end
 end
 
-if true %recompute
+if recompute %recompute
    
-    % Computing the incidence Matrix A
-    A = full(incidence(G));
-    dimA = size(A);
-    m = dimA(1); %number of nodes
-    n = dimA(2); %number of edges (elements)
-    %plot(G,'EdgeLabel', G.Edges.Id);
-
     % Computing At and Ac 
     tree = minspantree(G);
     At = full(incidence(tree));
@@ -83,7 +64,7 @@ if true %recompute
 
 
     orderedEdges = [cotree.Edges.Variables; tree.Edges.Variables];
-    % save(parsingResult,'B', 'Q','G');
+    save(parsingResult,'B', 'Q','G');
     
 end
 

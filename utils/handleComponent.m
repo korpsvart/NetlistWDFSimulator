@@ -20,9 +20,6 @@ for i=1:numCompEdges
         found=false;
         for j=1:numel(T)
             if isempty(T(j).parentEdge) %to skip already explored nodes
-                %(The check above is probably superfluous, since I don't
-                %think there is any way to explore an already seen
-                %component, if we already skip the parent)
                 if any(T(j).edges == T(compIndex).edges(i))
                     %They share the same virtual edge =>
                     %link the components in the tree
@@ -44,7 +41,6 @@ end
 %%Adaptation phase
 %We explored all the children of this node (or none if it was a leaf)
 %so now we can adapt it
-
 
 %Adapt the real edges
 for i=1:numCompEdges
@@ -141,12 +137,11 @@ elseif type ==2 %RIGID
     %Remove one of the endpoints of the virtual edge
     i1 = find(allNodes == parentEdgeEndpoints(1));
     i2 = find(allNodes == parentEdgeEndpoints(2));
-    %endpointToRemove = nodesI(parentEdgeEndpoints(1)); %Take the first endpoint, for example
-    %referenceEndpoint =nodesI(parentEdgeEndpoints(2)); %Other become reference
 
+    %Take them in this order so referenceRow < removeRow
+    %(no need to shift matrix rows in this way)
     endpointToRemove = max([i1, i2]);
     referenceEndpoint = min([i1, i2]);
-
 
 
     %Get adjacency matrix
@@ -161,19 +156,8 @@ elseif type ==2 %RIGID
     %ordering...
     A(endpointToRemove, :) = []; %remove row
 
-
-
-    % if (referenceEndpoint>endpointToRemove) %shift for removal
-    %     referenceEndpoint = referenceEndpoint-1;
-    % end
-
-
     %Get G conductance vector (and diag matrix)
     %We've the Z vector already at our disposal so it's easy
-    % sortedEdges = sort(edges+1);
-    % 
-    % 
-    % G_vector = 1./Z(sortedEdges);
     G_vector = 1./Z(componentGraph.Edges.Id);
     G_m = diag(G_vector);
 
@@ -233,6 +217,7 @@ elseif type ==2 %RIGID
        S = 2*Q'*inv(Q*Z_inv*Q')*Q*Z_inv - eye(n);
 
        %According to MATLAb it's faster and more accurate like this
+       %But also much less readable
        %S = 2*Q'*(Q*(Z\Q')\Q)/Z - eye(n);
      else
        S = eye(n) - 2*Z_m*B'*inv(B*Z_m*B')*B;
@@ -241,9 +226,6 @@ elseif type ==2 %RIGID
        %S = eye(n) - 2*Z*B'*((B*Z*B')\B);
 
     end
-
-
-
 
     positions = zeros(numCompEdges, 1);
     for h=1:numCompEdges
@@ -257,10 +239,7 @@ elseif type ==2 %RIGID
     %Save the scattering row for the parent edge, going up
     T(compIndex).scatteringUp=overallS(element_mIndex, :);
 
-   
-    
-
-    
+       
 
 end
 

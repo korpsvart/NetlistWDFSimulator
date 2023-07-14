@@ -1,4 +1,4 @@
-function [VOut] = simulate_tree(Tree, E, Z, S, Vin, numOutputs, numComps, outputPorts)
+function [VOut] = simulateWDFTree(Tree, E, Z, S, Vin, numOutputs, numComps, outputPorts)
 %% Simulation phase
 
 %sort by increasing depth

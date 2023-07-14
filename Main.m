@@ -20,23 +20,17 @@ numOutputs = numel(outputPorts);
 [Vin,Fs] = audioread('data/audio/ExpSweep.wav');
 Ts=1/Fs;
 
-tic
-
 %% Build WDF Structure
 
-[orderedEdges, Z, S] = all_parsing(netlistFilename, Fs, refEdgeId);
-
+[orderedEdges, Z, S] = parseWDF(netlistFilename, Fs, refEdgeId);
 
 
 %% Simulate
 
-
 ids = orderedEdges(:, 2);
 refEdgeIndex = find(ids==refEdgeId);
 
-[V, I] = simulate(orderedEdges, Z, S, refEdgeIndex, Vin);
-
-toc
+[V, I] = simulateWDF(orderedEdges, Z, S, refEdgeIndex, Vin);
 
 
 %% Plotting the results
