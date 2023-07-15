@@ -43,7 +43,7 @@ for n=1:numSamples
         %(manage linear elements)
         for j=1:numel(component.realEdges)
            edge = component.realEdges(j);
-           a(edge+1) = funcs{edge+1}(b(edge+1), Vin, n);
+           a(edge+1) = funcs{edge+1}(b(edge+1), Vin, n, Z(edge+1));
         end
         %Compute junction reflected waves
         %(the actual forward scan)
@@ -58,7 +58,7 @@ for n=1:numSamples
     end
 
     %Root scattering
-    b(edge+1)=funcs{edge+1}(a(edge+1), Vin, n);
+    b(edge+1)=funcs{edge+1}(a(edge+1), Vin, n, Z(edge+1));
     a(edge+1)=b(edge+1);
 
 

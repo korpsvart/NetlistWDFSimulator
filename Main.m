@@ -8,20 +8,20 @@ addpath utils\main\
 %% Variables to adjust depending on the netlist
 
 
-makeGeneratorsReal = false;
+makeGeneratorsReal = true;
 
-netlistFilename = 'BridgeTSP';
+netlistFilename = 'Diodo';
 %Id of the edge corresponding to non-adaptable element
 %leave empty string if all elements are adaptable
 %(including ideal generators if makeGeneratorsReal is set to true)
 %DO NOT specify a voltage generator if makeGeneratorsReal is true!
 %(Output will be wrong)
-refEdgeId = "Vin"; 
+refEdgeId = "D1"; 
 %Specify the names of the ports to compute the output
-outputPortsIds = ["R2"];
+outputPortsIds = ["R1"];
 %Specify the reference signals filenames for results validation, if you
 %have any (for example output from LTSpice). Leave empty if not used
-referenceSignalFilenames = ["data/audio/bridget_vr2p.wav"];
+referenceSignalFilenames = ["data/audio/diodo_output_r1_ideal.wav"];
 numOutputs = numel(outputPortsIds);
 
 %% Import Input Audio Signal
@@ -49,7 +49,7 @@ for i=1:numOutputs
     VOut(i, :) = V(ids==outputPortsIds(i), :);
 end
 
-plotResults(VOut, referenceSignalFilenames, Fs);
+plotResults(-VOut, referenceSignalFilenames, Fs);
 
 
 

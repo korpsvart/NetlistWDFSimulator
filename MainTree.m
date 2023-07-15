@@ -7,18 +7,18 @@ addpath triconnectedDecomp\
 
 %% Variables to adjust depending on the netlist
 
-makeGeneratorsReal = false;
-netlistFilename = 'BridgeTSP';
+makeGeneratorsReal = true;
+netlistFilename = 'Diodo';
 %Id of the edge corresponding to non-adaptable element
 %(You MUST specify a non-adaptable element in this version at the moment)
 %DO NOT specify a voltage generator if makeGeneratorsReal is true!
 %(Output will be wrong)
-refEdgeId = "Vin";
+refEdgeId = "D1";
 %Specify the names of the ports to compute the output
-outputPortsIds = ["R2"];
+outputPortsIds = ["R1"];
 %Specify the reference signals filenames for results validation, if you
 %have any (for example output from LTSpice). Leave empty if not used
-referenceSignalFilenames = ["data/audio/bridget_vr2p.wav"];
+referenceSignalFilenames = ["data/audio/diodo_output_r1_ideal.wav"];
 numOutputs = numel(outputPortsIds);
 
 

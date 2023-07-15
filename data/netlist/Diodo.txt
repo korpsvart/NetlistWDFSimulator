@@ -1,0 +1,10 @@
+* /Users/ritz/Documents/LTspice/Diodo.asc
+R1 N002 0 10k
+C1 N002 0 10n
+D1 N001 N002 1N4148
+V1 N001 0 wavefile = ExpSweep.wav
+.model D D
+.lib /Users/ritz/Library/Application Support/LTspice/lib/cmp/standard.dio
+.tran 2s
+.backanno
+.end

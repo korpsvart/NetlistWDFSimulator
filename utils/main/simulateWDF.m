@@ -36,7 +36,7 @@ if isempty(refEdgeIndex)
         %Waves reflected from adaptable elements
     
         for i=k
-            a(i) = funcs{i}(b(i), Vin, ii);
+            a(i) = funcs{i}(b(i), Vin, ii, Z_diag(i));
         end
        
         b = S*a; %reflecting from the junction
@@ -58,14 +58,14 @@ else
         %forward scan
     
         for i=k
-            a(i) = funcs{i}(b(i), Vin, ii);
+            a(i) = funcs{i}(b(i), Vin, ii, Z_diag(i));
         end
        
     
         b = S*a; %reflecting from the junction
     
         %local scattering
-        a(refEdgeIndex) = funcs{refEdgeIndex}(b(refEdgeIndex), Vin, ii);
+        a(refEdgeIndex) = funcs{refEdgeIndex}(b(refEdgeIndex), Vin, ii, Z_diag(refEdgeIndex));
     
         %backward scan
         b = S*a;

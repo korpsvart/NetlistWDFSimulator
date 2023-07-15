@@ -10,17 +10,19 @@ funcs = cell(n,1);
 for i=1:n
 switch types(i)
     case 'R'    
-        funcs{i} = @(b, Vin, ii) 0;
+        funcs{i} = @(b, Vin, ii, Z) 0;
     case 'C'    
-        funcs{i} = @(b, Vin, ii) b;
+        funcs{i} = @(b, Vin, ii, Z) b;
     case 'L'
-        funcs{i} = @(b, Vin, ii) -b;
+        funcs{i} = @(b, Vin, ii, Z) -b;
     case 'Vreal'
-        funcs{i} = @(b, Vin, ii) Vin(ii); %small series resistance value
+        funcs{i} = @(b, Vin, ii, Z) Vin(ii); %small series resistance value
     case 'Ireal'
-        funcs{i} = @(b, Vin, ii) 10e9*Vin(ii); % large resistance value
+        funcs{i} = @(b, Vin, ii, Z) 10e9*Vin(ii); % large resistance value
     case 'V'
-        funcs{i} = @(b, Vin, ii) 2*Vin(ii)-b; % ideal voltage source
+        funcs{i} = @(b, Vin, ii, Z) 2*Vin(ii)-b; % ideal voltage source
+    case 'D'
+        funcs{i} = @(b, Vin, ii, Z) ExpDiodeLambert(b, Z); % Diode
 end
 end
 
