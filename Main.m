@@ -6,8 +6,16 @@ addpath utils
 
 %% Variables to adjust depending on the netlist
 
+
+makeGeneratorsReal = false;
+
 netlistFilename = 'BridgeTSP';
-refEdgeId = "Vin"; %id of the edge corresponding to non-adaptable element
+%Id of the edge corresponding to non-adaptable element
+%leave empty string if all elements are adaptable
+%(including ideal generators if makeGeneratorsReal is set to true)
+%DO NOT specify a voltage generator if makeGeneratorsReal is true!
+%(Output will be wrong)
+refEdgeId = "Vin"; 
 %Specify the names of the ports to compute the output
 outputPortsIds = ["R2"];
 %Specify the reference signals filenames for results validation, if you
@@ -21,7 +29,7 @@ Ts=1/Fs;
 
 %% Build WDF Structure
 
-[orderedEdges, Z, S] = parseWDF(netlistFilename, Fs, refEdgeId);
+[orderedEdges, Z, S] = parseWDF(netlistFilename, Fs, refEdgeId, makeGeneratorsReal);
 
 
 %% Simulate

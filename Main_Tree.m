@@ -6,8 +6,12 @@ addpath triconnectedDecomp\
 
 %% Variables to adjust depending on the netlist
 
+
+makeGeneratorsReal = false;
 netlistFilename = 'BridgeTSP';
-refEdgeId = "Vin"; %id of the edge corresponding to non-adaptable element
+%Id of the edge corresponding to non-adaptable element
+%(You MUST specify a non-adaptable element in this version at the moment)
+refEdgeId = "Vin";
 %Specify the names of the ports to compute the output
 outputPortsIds = ["R2"];
 %Specify the reference signals filenames for results validation, if you

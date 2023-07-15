@@ -17,9 +17,9 @@ switch type
         Z = 1/(Fs*2*value);
     case 'L'
         Z = Fs*2*value;
-    case 'V'
+    case 'Vreal'
         Z = 10e-6; % small series resistance value
-    case 'I'
+    case 'Ireal'
         Z = 10e9; % large resistance value
 end
 

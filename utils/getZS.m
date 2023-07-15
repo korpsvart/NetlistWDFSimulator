@@ -28,41 +28,48 @@ end
 
 %% Computing Scattering Matrix
 if (~previousParsingLoaded || updated)
+
+    if refEdgeId==""
+        %All elements are adaptable
+        Z_diag = getZ(orderedEdges, Fs_signal);
+    else
     
-    adaptableEdgesIndexes = orderedEdges(:, 2)~=refEdgeId;
-    Z = getZ(orderedEdges, Fs_signal);
-    adaptableEdgesIds = orderedEdges(adaptableEdgesIndexes, 2);
-    Z_diag = diag(Z);
-    Z_adapted = Z_diag(adaptableEdgesIndexes);
-
-
-    %%%%%%%%%%%%%%%%%%
-    % Compute the Z for the non-adaptable element
-
-    %get endpoints info
-    endpoints = G.Edges.EndNodes;
-    refEdgeIndex = find(G.Edges.Id == refEdgeId);
-    refEdgeEndpoints = convertCharsToStrings(endpoints(refEdgeIndex, :));
-
-    Gprime = rmedge(G, refEdgeIndex);
-
-
-    graphNodesOrder = convertCharsToStrings(Gprime.Nodes.Variables);
-
-    %Reorder Z_adapted according to graph edges ordering
-    Z_reordered = zeros(size(Z_adapted, 1), 1);
-    for h=1:size(Z_adapted, 1)
-        Z_reordered(h)= Z_adapted(Gprime.Edges.Id(h)==adaptableEdgesIds);
+        adaptableEdgesIndexes = orderedEdges(:, 2)~=refEdgeId;
+        Z_diag = getZ(orderedEdges, Fs_signal);
+        adaptableEdgesIds = orderedEdges(adaptableEdgesIndexes, 2);
+        Z_adapted = Z_diag(adaptableEdgesIndexes);
+    
+    
+        %%%%%%%%%%%%%%%%%%
+        % Compute the Z for the non-adaptable element
+    
+        %get endpoints info
+        endpoints = G.Edges.EndNodes;
+        refEdgeIndex = find(G.Edges.Id == refEdgeId);
+        refEdgeEndpoints = convertCharsToStrings(endpoints(refEdgeIndex, :));
+    
+        Gprime = rmedge(G, refEdgeIndex);
+    
+    
+        graphNodesOrder = convertCharsToStrings(Gprime.Nodes.Variables);
+    
+        %Reorder Z_adapted according to graph edges ordering
+        Z_reordered = zeros(size(Z_adapted, 1), 1);
+        for h=1:size(Z_adapted, 1)
+            Z_reordered(h)= Z_adapted(Gprime.Edges.Id(h)==adaptableEdgesIds);
+        end
+    
+        
+        [thevImp] = adaptRJunction(Gprime, Z_reordered, refEdgeEndpoints, graphNodesOrder);
+    
+        Z_diag(~adaptableEdgesIndexes)=thevImp;
     end
-
     
-    [thevImp] = adaptRJunction(Gprime, Z_reordered, refEdgeEndpoints, graphNodesOrder);
-
-    Z_diag(~adaptableEdgesIndexes)=thevImp;
-    Z = diag(Z_diag);
 
 
     %%%%%%%%%%%%%%%%%%%
+
+    Z = diag(Z_diag);
 
     S = getScatteringMatrix(B, Q, Z);
     
