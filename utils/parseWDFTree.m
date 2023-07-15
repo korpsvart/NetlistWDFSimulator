@@ -1,4 +1,4 @@
-function [Tree,E, Z, S, numComps, outputPorts] = parseWDFTree(netlistFilename, refEdgeId, numOutputs, outputPortsIds, Fs)
+function [Tree,E, Z, S, numComps, outputPorts] = parseWDFTree(netlistFilename, refEdgeId, numOutputs, outputPortsIds, Fs , makeGeneratorsReal)
 
 
 %% Parsing netlist and building graph G
@@ -28,6 +28,13 @@ end
 N = string(struct2cell(N));
 [T, numComps, endpoints] = TriconnectedComponents(E, N); %Call C++ interface
 T = T(1:numComps);
+
+if (makeGeneratorsReal)
+    idx = [E.Type]=="V";
+    for i=find(idx)
+        E(i).Type = "Vreal";
+    end
+end
 
 
 %% Adaptation phase

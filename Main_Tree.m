@@ -6,11 +6,12 @@ addpath triconnectedDecomp\
 
 %% Variables to adjust depending on the netlist
 
-
 makeGeneratorsReal = false;
 netlistFilename = 'BridgeTSP';
 %Id of the edge corresponding to non-adaptable element
 %(You MUST specify a non-adaptable element in this version at the moment)
+%DO NOT specify a voltage generator if makeGeneratorsReal is true!
+%(Output will be wrong)
 refEdgeId = "Vin";
 %Specify the names of the ports to compute the output
 outputPortsIds = ["R2"];
@@ -25,7 +26,7 @@ numOutputs = numel(outputPortsIds);
 [Vin,Fs] = audioread('data/audio/ExpSweep.wav');
 Ts=1/Fs;
 
-[Tree,E, Z, S, numComps, outputPorts] = parseWDFTree(netlistFilename, refEdgeId, numOutputs, outputPortsIds, Fs);
+[Tree,E, Z, S, numComps, outputPorts] = parseWDFTree(netlistFilename, refEdgeId, numOutputs, outputPortsIds, Fs, makeGeneratorsReal);
 
 
 %% Simulate
