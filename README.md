@@ -41,7 +41,7 @@ At the beginning of both `Main.m` and `MainTree.m`, there are some variables tha
 
 ## Help and Documentation
 
-For detailed information on the individual functions, please refer to the [documentation](./documentation/NetlistWDFDocumentation.pdf).
+For detailed information on the individual functions, please refer to the [documentation](./documentation/Documentation.pdf).
 
 ## Authors
 
