@@ -5,9 +5,6 @@ A MATLAB (R2023a) implementation of a WDF based circuit simulator which can pars
 
 
 
-
-
-
 ## Files organization
 
 - Inside the root folder you can find two versions of the main applicative:

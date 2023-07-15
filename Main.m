@@ -1,7 +1,8 @@
 close all
 clearvars 
 clc
-addpath utils
+addpath utils\common\
+addpath utils\main\
 
 
 %% Variables to adjust depending on the netlist
