@@ -42,10 +42,4 @@ S = zeros(M, L);
 
 [Tree,Z, S] = handleComponent(T, numEdges, rootCompIndex, refEdgeIndex, E, Z, Fs, 1, endpoints, S);
 
-
-
-
-
-
-
 end
